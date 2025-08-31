@@ -150,7 +150,7 @@ jobs:
         ls -lrt
         cat ${VALUE_FILE}
 
-        #git add ${VALUE_FILE}; git commit --m "Update image tag by auto deploy script"; git push
+        git add ${VALUE_FILE}; git commit --m "Update image tag by auto deploy script"; git push
 
     - name: Slack notification end
       if: always()
