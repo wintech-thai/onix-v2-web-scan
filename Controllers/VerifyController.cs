@@ -14,9 +14,9 @@ namespace OnixWebScan.Controllers
             var key = Environment.GetEnvironmentVariable("ENCRYPTION_KEY");
             var iv = Environment.GetEnvironmentVariable("ENCRYPTION_IV");
             
-            //Console.WriteLine($"Received Text - {data}");
-            //Console.WriteLine($"DEBUG2 - KEY = {key}");
-            //Console.WriteLine($"DEBUG3 - IV = {iv}");
+            Console.WriteLine($"Received Text - {data}");
+            Console.WriteLine($"DEBUG2 - KEY = {key}");
+            Console.WriteLine($"DEBUG3 - IV = {iv}");
         
             var decryptedData = EncryptionUtils.Decrypt(data, key!, iv!);
 
