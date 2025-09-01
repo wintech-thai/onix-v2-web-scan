@@ -1,4 +1,4 @@
-namespace onix_v2_web_scan.Models;
+namespace OnixWebScan.Models;
 
 public class ErrorViewModel
 {

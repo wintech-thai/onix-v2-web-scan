@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using onix_v2_web_scan.Models;
+using OnixWebScan.Models;
 
-namespace onix_v2_web_scan.Controllers;
+namespace OnixWebScan.Controllers;
 
 public class HomeController : Controller
 {

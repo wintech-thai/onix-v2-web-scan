@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>onix_v2_web_scan</RootNamespace>
+    <RootNamespace>OnixWebScan</RootNamespace>
   </PropertyGroup>
 
 </Project>
