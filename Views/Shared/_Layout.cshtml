@@ -2,72 +2,55 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"] - OnixWebScan</title>
-    <meta name="theme-color" content="#111827" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>@ViewData["Title"] - Please Scan</title>
+  <meta name="theme-color" content="#111827" />
 
-    @* ฟอนต์สมัยใหม่ (Inter + Noto Sans Thai) สำหรับไทย/อังกฤษ *@
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&display=swap"
-      rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet" />
 
-    @* คงธีมเดิมของโปรเจกต์ไว้ เพื่อไม่ให้ “หลุดธีม” *@
-    <link rel="stylesheet" href="scan-static/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="scan-static/css/site.css" asp-append-version="true" />
+  <link rel="stylesheet" href="scan-static/lib/bootstrap/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="scan-static/css/site.css" asp-append-version="true" />
 
-    <style>
-      /* ===== Typo / Base ===== */
-      html, body { height: 100%; }
-      body {
-        margin: 0;
-        font-family: "Inter","Noto Sans Thai",system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",sans-serif;
-        color:#0f172a;
-        background:#f7f8fb;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
+  <style>
+    html, body { height:100%; }
+    body{
+      margin:0;
+      font-family:"Inter","Noto Sans Thai",system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",sans-serif;
+      color:#0f172a;background:#f7f8fb;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
 
-      /* ===== Header (เข้ากับ Bootstrap เดิม แต่ดูโมเดิร์นขึ้น) ===== */
-      .ox-header.navbar {
-        background: #ffffff;
-        border-bottom: 1px solid #e6e8ef;
-        box-shadow: 0 4px 14px rgba(0,0,0,.04);
-      }
-      .ox-brand {
-        display:flex; align-items:center; gap:10px;
-        font-weight:700; letter-spacing:.2px;
-        color:#0f172a !important; text-decoration:none;
-      }
-      .ox-brand-badge {
-        display:inline-flex; align-items:center; justify-content:center;
-        width:28px; height:28px; border-radius:8px;
-        background:#111827; color:#fff; font-size:14px; font-weight:700;
-      }
-      .ox-link { font-weight:600; color:#334155 !important; }
-      .ox-link:hover { color:#111827 !important; }
+      min-height:100dvh;
+      display:grid;
+      grid-template-rows:auto 1fr auto; /* header | main | footer */
+    }
 
-      /* ===== Container / Main ===== */
-      .ox-container { max-width: 960px; }
-      main { padding: 18px 0 28px 0; }
+    .ox-header.navbar{
+      background:#fff;border-bottom:1px solid #e6e8ef;box-shadow:0 4px 14px rgba(0,0,0,.04);
+    }
+    .ox-brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px;color:#0f172a!important;text-decoration:none}
+    .ox-brand-badge{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#111827;color:#fff;font-size:14px;font-weight:700}
+    .ox-link{font-weight:600;color:#334155!important}.ox-link:hover{color:#111827!important}
 
-      /* ===== Footer ===== */
-      .ox-footer {
-        border-top:1px solid #e6e8ef; background:#ffffff;
-      }
-      .ox-footer .inner {
-        max-width: 960px;
-        padding: 14px 0;
-        color:#64748b; font-size:14px;
-      }
-      .ox-footer a { color:#475569; text-decoration:none; }
-      .ox-footer a:hover { color:#111827; }
+    .ox-container{max-width:960px}
 
-      /* ===== Utilities ===== */
-      .ox-muted { color:#64748b; }
-    </style>
+    /* main ปกติ */
+    .ox-main{ padding:18px 0 28px }
+
+    /* main แบบ “จัดกลางเป๊ะ” ใช้เฉพาะหน้าที่เซ็ต ViewData["MainClass"] */
+    .ox-main--center{
+      padding:0;                 /* เอา padding ที่ทำให้เพี้ยนออก */
+      display:grid;
+      place-items:center;        /* กลางทั้งแกน X/Y ภายในแถว 1fr ของ body grid */
+      min-height:100%;           /* สูงเท่าพื้นที่ระหว่าง header กับ footer */
+    }
+
+    .ox-footer{border-top:1px solid #e6e8ef;background:#fff}
+    .ox-footer .inner{max-width:960px;padding:14px 0;color:#64748b;font-size:14px}
+    .ox-footer a{color:#475569;text-decoration:none}.ox-footer a:hover{color:#111827}
+  </style>
 </head>
 
 <body>
@@ -75,41 +58,32 @@
     <nav class="navbar navbar-expand-md navbar-light ox-header">
       <div class="container ox-container">
         <a class="navbar-brand ox-brand" href="/">
-          <span class="ox-brand-badge" aria-hidden="true">OX</span>
-          <span>OnixWebScan</span>
+          <span class="ox-brand-badge" aria-hidden="true">PS</span>
+          <span>Please Scan</span>
         </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#oxNav" aria-controls="oxNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#oxNav" aria-controls="oxNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
 
         <div id="oxNav" class="collapse navbar-collapse justify-content-end">
           <ul class="navbar-nav mb-2 mb-md-0">
-            <li class="nav-item">
-              <a class="nav-link ox-link" href="/">หน้าแรก</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link ox-link" href="mailto:support@example.com">ช่วยเหลือ</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link ox-link" asp-area="" asp-controller="Home" asp-action="Privacy">ความเป็นส่วนตัว</a>
-            </li>
+            <li class="nav-item"><a class="nav-link ox-link" href="/">หน้าแรก</a></li>
+            <li class="nav-item"><a class="nav-link ox-link" href="mailto:support@example.com">ช่วยเหลือ</a></li>
+            <li class="nav-item"><a class="nav-link ox-link" asp-area="" asp-controller="Home" asp-action="Privacy">ความเป็นส่วนตัว</a></li>
           </ul>
         </div>
       </div>
     </nav>
   </header>
 
-  <div class="container ox-container">
-    <main role="main">
-      @RenderBody()
-    </main>
-  </div>
+  <main role="main" class="@(ViewData["MainClass"] as string ?? "ox-main")">
+    @RenderBody()
+  </main>
 
   <footer class="ox-footer">
     <div class="container ox-container inner d-flex justify-content-between align-items-center">
-      <div>© @DateTime.Now.Year OnixWebScan</div>
+      <div>© @DateTime.Now.Year Please Scan</div>
       <div><a asp-area="" asp-controller="Home" asp-action="Privacy">นโยบายความเป็นส่วนตัว</a></div>
     </div>
   </footer>
