@@ -4,7 +4,6 @@
 @using System.Collections.Generic;
 @{
     ViewData["Title"] = "Verify";
-    /* ให้ main เป็นโหมดจัดกลางแนวตั้ง */
     ViewData["MainClass"] = "ox-main ox-main--center";
 
     var p = Model?.Payload;
@@ -71,11 +70,19 @@
         : Url.Action("ContactSupport","Verify", new { serial = s?.Serial, pin = s?.Pin, brand = s?.OrgId });
     var primaryText = isSuccess ? "เปิดข้อมูลสินค้า" : "ติดต่อทีมดูแล";
 
-    var iconId   = isSuccess ? "i-check-circle" : (isError ? "i-x-circle" : "i-warning");
-    var heroGrad = isSuccess ? "grad-success"   : (isError  ? "grad-error" : "grad-warn");
+    var iconId =
+        isSuccess ? "i-check-circle"
+        : rawStatus == "ALREADY_REGISTERED" ? "i-warning"
+        : isError ? "i-x-circle"
+        : "i-warning";
+
+    var heroBg =
+        isSuccess ? "bg-success"
+        : rawStatus == "ALREADY_REGISTERED" ? "bg-warn"
+        : isError ? "bg-error"
+        : "bg-warn";
 }
 
-<!-- Icons -->
 <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
   <symbol id="i-check-circle" viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -97,38 +104,25 @@
 </svg>
 
 <style>
-  /* ===== ตรงนี้คือกุญแจให้ “อยู่กลางแนวนอน” ===== */
   .hero{ margin-inline:auto; }
-
   .hero{
     border-radius:22px; padding:28px 24px; color:#fff; position:relative; overflow:hidden;
     box-shadow:0 16px 40px rgba(0,0,0,.18);
-    width:min(720px, 100%);          /* กว้างสุด 720px, มือถือเต็มกว้าง */
+    width:min(720px, 100%);
+    background:#111827;
   }
   .hero:before{
     content:""; position:absolute; inset:-1px; border-radius:24px; pointer-events:none;
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.20);
   }
 
-  .grad-success{
-    background:
-      radial-gradient(1200px 600px at -10% -20%, rgba(255,255,255,.18), transparent 60%),
-      linear-gradient(135deg, #0ea5e9 0%, #10b981 45%, #22c55e 100%);
-  }
-  .grad-error{
-    background:
-      radial-gradient(1200px 600px at 110% -10%, rgba(255,255,255,.14), transparent 60%),
-      linear-gradient(135deg, #ef4444 0%, #dc2626 35%, #991b1b 100%);
-  }
-  .grad-warn{
-    background:
-      radial-gradient(1200px 600px at 0% 120%, rgba(255,255,255,.16), transparent 60%),
-      linear-gradient(135deg, #f59e0b 0%, #eab308 40%, #ca8a04 100%);
-  }
+  .bg-success{ background:#16a34a !important; }
+  .bg-error{   background:#dc2626 !important; }
+  .bg-warn{    background:#d97706 !important; }
 
   .statusWrap{ display:flex; align-items:center; gap:18px; flex-wrap:wrap }
   .statusIcon{ width:60px; height:60px; opacity:.95; filter:drop-shadow(0 6px 18px rgba(0,0,0,.25)) }
-  .statusCode{ font-weight:900; letter-spacing:1px; line-height:1; font-size:44px; text-transform:uppercase; text-shadow:0 10px 30px rgba(0,0,0,.35) }
+  .statusCode{ font-weight:900; letter-spacing:1px; line-height:1; font-size:44px; text-transform:uppercase }
   .statusTitle{ font-size:18px; opacity:.95; margin-top:6px }
   .lead{ margin-top:14px }
   .lead .line{ opacity:.98; margin:6px 0 }
@@ -143,8 +137,7 @@
 </style>
 
 <div class="container ox-container">
-  <!-- HERO -->
-  <div class="hero @heroGrad">
+  <div class="hero @heroBg">
     <div class="statusWrap">
       <svg class="statusIcon"><use href="#@iconId" /></svg>
       <div>
@@ -161,70 +154,4 @@
       <a class="btn" href="@primaryHref"><svg><use href="#i-link"/></svg> @primaryText</a>
     </div>
   </div>
-  
-  @*
-  
-  <!-- ข้อมูลสินค้า -->
-  <div class="section">
-    <h2>ข้อมูลสินค้า</h2>
-    <div class="row"><div class="label"><svg><use href="#i-hash"/></svg>Serial</div><div class="value">@((s?.Serial) ?? "-")</div></div>
-    <div class="row"><div class="label"><svg><use href="#i-key"/></svg>PIN</div><div class="value">@((s?.Pin) ?? "-")</div></div>
-    <div class="row"><div class="label"><svg><use href="#i-building"/></svg>แบรนด์</div><div class="value">@((s?.OrgId) ?? "-")</div></div>
-    <div class="row"><div class="label"><svg><use href="#i-tag"/></svg>กลุ่มสินค้า</div><div class="value">@((s?.ItemGroup) ?? "-")</div></div>
-    <div class="row"><div class="label"><svg><use href="#i-box"/></svg>สถานะลงทะเบียน</div><div class="value">@regText</div></div>
-    <div class="row"><div class="label"><svg><use href="#i-box"/></svg>สถานะการใช้งาน</div><div class="value">@usedText</div></div>
-  </div>
-
-  <!-- รายละเอียดการตรวจสอบ -->
-  <div class="section">
-    <h2>รายละเอียดการตรวจสอบ</h2>
-    <div class="row"><div class="label"><svg><use href="#i-seq"/></svg>Sequence</div><div class="value">@((s?.SequenceNo) ?? "-")</div></div>
-    <div class="row"><div class="label"><svg><use href="#i-beaker"/></svg>Run Id</div><div class="value">@((s?.RunId) ?? "-")</div></div>
-    <div class="row">
-      <div class="label"><svg><use href="#i-globe"/></svg>ลิงก์สินค้า</div>
-      <div class="value ellipsis">
-        @if (!string.IsNullOrWhiteSpace(encodedProductUrl)) {
-          <a href="@Url.Action("OpenExternal","Verify", new { u = encodedProductUrl })">
-            @((s?.Url) ?? "-")
-          </a>
-        } else { @("-") }
-      </div>
-    </div>
-    <div class="row">
-      <div class="label"><svg><use href="#i-box"/></svg>พาธไฟล์อัปโหลด</div>
-      <div class="value ellipsis">@((s?.UploadedPath) ?? "-")</div>
-    </div>
-  </div>
-
-  <!-- เวลา / อายุข้อมูล -->
-  <div class="section">
-    <h2>เวลา</h2>
-    <div class="row"><div class="label"><svg><use href="#i-clock"/></svg>สร้างข้อมูล</div><div class="value">@OnixWebScan.Models.VerifyViewModel.Fmt(p?.DataGeneratedDate)</div></div>
-    <div class="row"><div class="label"><svg><use href="#i-clock"/></svg>ลงทะเบียน</div><div class="value">@OnixWebScan.Models.VerifyViewModel.Fmt(s?.RegisteredDate)</div></div>
-    <div class="row"><div class="label"><svg><use href="#i-clock"/></svg>อายุข้อมูล</div><div class="value">@Model.TtlDisplay</div></div>
-  </div>
-
-  <!-- รหัสอ้างอิง -->
-  <div class="section">
-    <h2>รหัสอ้างอิง</h2>
-    <div class="row"><div class="label"><svg><use href="#i-id"/></svg>Record Id</div><div class="value">@((s?.Id) ?? "-")</div></div>
-  </div>
-
-  <!-- ช่วยเหลือ -->
-  <div class="section">
-    <h2>ต้องการให้เราช่วยดูเพิ่ม?</h2>
-    <div class="muted">ส่งรูปสินค้า/ใบเสร็จ หรือบอกรหัส Serial & PIN ให้ทีมเราได้</div>
-    <div class="cta" style="margin-top:10px">
-      <a class="btn light" href="@Url.Action("ContactSupport","Verify", new { serial = s?.Serial, pin = s?.Pin, brand = s?.OrgId })">
-        อีเมลทีมดูแล
-      </a>
-      @if (!string.IsNullOrWhiteSpace(encodedProductUrl)) {
-        <a class="btn light" href="@Url.Action("OpenExternal","Verify", new { u = encodedProductUrl })">
-          ไปยังหน้าสินค้า
-        </a>
-      }
-    </div>
-  </div>
-
-  *@
 </div>
