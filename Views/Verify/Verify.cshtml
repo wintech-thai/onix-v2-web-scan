@@ -3,140 +3,466 @@
 @using System.Net;
 @using System.Collections.Generic;
 @{
-    ViewData["Title"] = "Verify";
-    ViewData["MainClass"] = "ox-main ox-main--center";
+  ViewData["Title"] = "Verify";
+  ViewData["MainClass"] = "ox-main ox-main--center";
 
-    var p = Model?.Payload;
-    var s = p?.ScanItem;
+  var p = Model?.Payload;
+  var s = p?.ScanItem;
 
-    string Norm(string? v) => string.IsNullOrWhiteSpace(v) ? "UNKNOWN" : v.Trim().ToUpperInvariant();
-    var rawStatus = Norm(p?.Status);
-    bool IsSuccess(string st) => st is "OK" or "SUCCESS" or "VALID";
-    bool IsError(string st) => st is "ALREADY_REGISTERED" or "NOTFOUND" or
-                               "PARAM_MISSING" or "PARAMETER_MISSING" or "NO_DATA" or
-                               "DECRYPT_FAIL" or "DECRYPT_ERROR" or "INVALID" or "FAILED";
-    bool isSuccess = IsSuccess(rawStatus);
-    bool isError   = IsError(rawStatus);
+  string Norm(string? v) => string.IsNullOrWhiteSpace(v)
+    ? "UNKNOWN"
+    : v.Trim().ToUpperInvariant();
 
-    string statusCode = isSuccess ? "SUCCESS" : rawStatus;
-    var titleText = isSuccess ? "ยืนยันแล้วว่าเป็นสินค้าแท้"
-        : isError ? (rawStatus switch {
-            "ALREADY_REGISTERED" => "โค้ดนี้ถูกใช้ไปแล้ว",
-            "NOTFOUND" => "ไม่พบโค้ดนี้ในระบบ",
-            "PARAM_MISSING" or "PARAMETER_MISSING" or "NO_DATA" => "ข้อมูลที่ส่งมาไม่ครบ",
-            "DECRYPT_FAIL" or "DECRYPT_ERROR" => "ไม่สามารถถอดรหัสข้อมูลได้",
-            _ => "ตรวจสอบไม่ผ่าน"
-        }) : "สถานะไม่แน่ชัด กรุณาติดต่อทีมงาน";
+  var rawStatus = Norm(p?.Status);
+  bool IsSuccess(string st) => st
+    is "OK"
+    or "SUCCESS"
+    or "VALID";
 
-    var messages = new List<string>();
-    if (isSuccess) {
-        messages.Add("ขอบคุณที่ตรวจสอบ — คุณกำลังใช้สินค้าของแท้");
-        if (!string.IsNullOrWhiteSpace(p?.DescriptionEng)) messages.Add(p!.DescriptionEng);
-    } else if (isError) {
-        switch (rawStatus) {
-            case "ALREADY_REGISTERED":
-                messages.Add("โค้ดนี้ถูกใช้งานไปก่อนหน้า อาจถูกลงทะเบียนโดยผู้อื่นหรือร้านค้า");
-                messages.Add("หากเพิ่งซื้อ กรุณาติดต่อทีมงานเพื่อช่วยตรวจสอบเพิ่มเติม");
-                break;
-            case "NOTFOUND":
-                messages.Add("ไม่พบข้อมูลโค้ดในระบบ อาจพิมพ์ผิดหรือโค้ดไม่ถูกต้อง");
-                break;
-            case "PARAM_MISSING":
-            case "PARAMETER_MISSING":
-            case "NO_DATA":
-                messages.Add("ระบบไม่ได้รับพารามิเตอร์ที่จำเป็นครบถ้วน");
-                break;
-            case "DECRYPT_FAIL":
-            case "DECRYPT_ERROR":
-                messages.Add("ได้รับข้อมูลมาแล้วแต่ไม่สามารถถอดรหัสได้");
-                break;
-            default:
-                messages.Add("เกิดข้อผิดพลาดในการตรวจสอบ");
-                break;
-        }
-        if (!string.IsNullOrWhiteSpace(p?.DescriptionEng)) messages.Add(p!.DescriptionEng);
-    } else {
-        messages.Add("ไม่สามารถสรุปผลได้จากข้อมูลที่ได้รับ");
-        if (!string.IsNullOrWhiteSpace(p?.DescriptionEng)) messages.Add(p!.DescriptionEng);
+  bool IsError(string st) => st
+    is "ALREADY_REGISTERED"
+    or "NOTFOUND"
+    or "PARAM_MISSING"
+    or "PARAMETER_MISSING"
+    or "NO_DATA"
+    or "DECRYPT_FAIL"
+    or "DECRYPT_ERROR"
+    or "INVALID"
+    or "FAILED";
+  bool isSuccess = IsSuccess(rawStatus);
+  bool isError = IsError(rawStatus);
+  bool isWarning = rawStatus == "ALREADY_REGISTERED";
+
+  string statusCode = isSuccess ? "SUCCESS" : rawStatus;
+  var titleText = isSuccess ? "ยืนยันแล้วว่าเป็นสินค้าแท้"
+  : isError ? (rawStatus switch
+  {
+    "ALREADY_REGISTERED" => "โค้ดนี้ถูกใช้ไปแล้ว",
+    "NOTFOUND" => "ไม่พบโค้ดนี้ในระบบ",
+    "PARAM_MISSING" => "ข้อมูลที่ส่งมาไม่ครบ",
+    "PARAMETER_MISSING" => "พารามิเตอร์หายไป",
+    "NO_DATA" => "ไม่มีข้อมูล",
+    "DECRYPT_FAIL" or "DECRYPT_ERROR" => "ไม่สามารถถอดรหัสข้อมูลได้",
+    "INVALID" => "โค้ดไม่ถูกต้อง",
+    "FAILED" => "การตรวจสอบล้มเหลว",
+    _ => "ตรวจสอบไม่ผ่าน"
+  }) : "สถานะไม่แน่ชัด กรุณาติดต่อทีมงาน";
+
+  var messages = new List<string>();
+  if (isSuccess)
+  {
+    messages.Add("ขอบคุณที่ตรวจสอบ — คุณกำลังใช้สินค้าของแท้");
+  }
+  else if (isError)
+  {
+    switch (rawStatus)
+    {
+      case "ALREADY_REGISTERED":
+        messages.Add("หรือโค้ดนี้ถูกใช้งานไปก่อนหน้า อาจถูกลงทะเบียนโดยผู้อื่น");
+        messages.Add("กรุณาติดต่อทีมงานเพื่อช่วยตรวจสอบเพิ่มเติม");
+        break;
+      case "NOTFOUND":
+        messages.Add("ไม่พบข้อมูลสินค้านี้ในระบบ สินค้าอาจไม่ได้ลงทะเบียนในระบบ หรือข้อมูลอาจผิดพลาด");
+        @* messages.Add("สินค้าอาจไม่ได้ลงทะเบียนในระบบ หรือข้อมูลอาจผิดพลาด"); *@
+        break;
+      case "PARAM_MISSING":
+        messages.Add("ข้อมูลที่จำเป็นสำหรับการตรวจสอบไม่ครบถ้วน ไม่สามารถดำเนินการตรวจสอบความแท้ได้");
+        @* messages.Add("ไม่สามารถดำเนินการตรวจสอบความแท้ได้"); *@
+        break;
+      case "PARAMETER_MISSING":
+        messages.Add("พารามิเตอร์ที่ส่งมาตรวจสอบไม่ถูกต้องหรือหายไป กรุณาตรวจสอบลิงก์หรือ QR Code ที่ใช้ใหม่อีกครั้ง");
+        @* messages.Add("กรุณาตรวจสอบลิงก์หรือ QR Code ที่ใช้ใหม่อีกครั้ง"); *@
+        break;
+      case "NO_DATA":
+        messages.Add("ไม่มีข้อมูลสำหรับการตรวจสอบ ลิงก์หรือ QR Code อาจไม่ถูกต้อง หรือข้อมูลเสียหาย");
+        @* messages.Add("ลิงก์หรือ QR Code อาจไม่ถูกต้อง หรือข้อมูลเสียหาย"); *@
+        break;
+      case "DECRYPT_FAIL":
+        messages.Add("ไม่สามารถอ่านข้อมูลสินค้าได้ ข้อมูลอาจเสียหายหรือไม่ถูกต้อง");
+        @* messages.Add("ข้อมูลอาจเสียหายหรือไม่ถูกต้อง"); *@
+        break;
+      case "INVALID":
+        messages.Add("ข้อมูลสินค้าไม่ถูกต้องหรือไม่ตรงกับระบบ อาจเป็นสินค้าปลอมหรือข้อมูลถูกดัดแปลง");
+        @* messages.Add("อาจเป็นสินค้าปลอมหรือข้อมูลถูกดัดแปลง"); *@
+        break;
+      case "FAILED":
+        messages.Add("การตรวจสอบความแท้ล้มเหลว เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้งหรือติดต่อทีมงาน");
+        @* messages.Add("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้งหรือติดต่อทีมงาน"); *@
+        break;
+      default:
+        messages.Add("ไม่สามารถตรวจสอบความแท้ได้ สถานะไม่รู้จัก กรุณาติดต่อทีมงานเพื่อรับการช่วยเหลือ");
+        @* messages.Add("สถานะไม่รู้จัก กรุณาติดต่อทีมงานเพื่อรับการช่วยเหลือ"); *@
+        break;
     }
+  }
+  else
+  {
+    messages.Add("ไม่สามารถสรุปผลได้จากข้อมูลที่ได้รับ");
+    if (!string.IsNullOrWhiteSpace(p?.DescriptionEng)) messages.Add(p!.DescriptionEng);
+  }
 
-    string? encodedProductUrl = null;
-    if (!string.IsNullOrWhiteSpace(s?.Url)) {
-        var b64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(s!.Url));
-        encodedProductUrl = WebUtility.UrlEncode(b64);
-    }
-    var primaryHref = isSuccess
-        ? (encodedProductUrl is null ? "#" : Url.Action("OpenExternal","Verify", new { u = encodedProductUrl }))
-        : Url.Action("ContactSupport","Verify", new { serial = s?.Serial, pin = s?.Pin, brand = s?.OrgId });
-    var primaryText = isSuccess ? "เปิดข้อมูลสินค้า" : "ติดต่อทีมดูแล";
-
-    var iconId =
-        isSuccess ? "i-check-circle"
-        : rawStatus == "ALREADY_REGISTERED" ? "i-warning"
-        : isError ? "i-x-circle"
-        : "i-warning";
-
-    var heroBg =
-        isSuccess ? "bg-success"
-        : rawStatus == "ALREADY_REGISTERED" ? "bg-warn"
-        : isError ? "bg-error"
-        : "bg-warn";
+  string? encodedProductUrl = null;
+  if (!string.IsNullOrWhiteSpace(s?.Url))
+  {
+    var b64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(s!.Url));
+    encodedProductUrl = WebUtility.UrlEncode(b64);
+  }
+  var primaryHref = isSuccess
+  ? (encodedProductUrl is null ? "#" : Url.Action("OpenExternal", "Verify", new { u = encodedProductUrl }))
+  : Url.Action("ContactSupport", "Verify", new { serial = s?.Serial, pin = s?.Pin, brand = s?.OrgId });
+  var primaryText = isSuccess ? "เปิดข้อมูลสินค้า" : "ติดต่อทีมดูแล";
 }
 
-<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
-  <symbol id="i-check-circle" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
-    <path d="M8 12l3 3 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </symbol>
-  <symbol id="i-x-circle" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
-    <path d="M9 9l6 6M15 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-  </symbol>
-  <symbol id="i-warning" viewBox="0 0 24 24">
-    <path d="M12 3l10 18H2L12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-    <path d="M12 9v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="12" cy="17" r="1.2" fill="currentColor"/>
-  </symbol>
-  <symbol id="i-link" viewBox="0 0 24 24">
-    <path d="M10 14l-2 2a4 4 0 1 1-6-6l2-2M14 10l2-2a4 4 0 1 1 6 6l-2 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    <path d="M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-  </symbol>
-</svg>
+<div
+  id="verifyContent" class="fade-container"
+  style="max-width: 400px; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; margin: 0px auto;"
+>
 
-<style>
-  .hero{ margin-inline:auto; }
-  .hero{
-    border-radius:22px; padding:28px 24px; color:#fff; position:relative; overflow:hidden;
-    box-shadow:0 16px 40px rgba(0,0,0,.18);
-    width:min(720px, 100%);
-    background:#111827;
+  <!-- Status Badge -->
+  <div style="background: @(isSuccess ? "linear-gradient(135deg, #6FE10A 0%, #58CD04 100%)" : isWarning ? "linear-gradient(135deg, #ffa726 0%, #ff9800 100%)" : "linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)"); color: white; padding: 6px 16px; border-radius: 16px; font-size: 16px; font-weight: 600; margin-bottom: 4px; box-shadow: 0 3px 8px @(isSuccess ? "rgba(111, 225, 10, 0.3)" : isWarning ? "rgba(255, 167, 38, 0.3)" : "rgba(255, 107, 107, 0.3)");">
+    @(isSuccess ? "✓ ตรวจสอบสำเร็จ" : isWarning ? "⚠️ ระวัง" : "⚠️ พบปัญหา")
+  </div>
+
+  <!-- Success Icon -->
+  <div style="position: relative;">
+    @if (isSuccess)
+    {
+      <div style="background: linear-gradient(135deg, #6FE10A 0%, #58CD04 100%); border-radius: 50%; padding: 15px; margin-bottom: 8px; box-shadow: 0 6px 16px rgba(111, 225, 10, 0.3);">
+        <svg style="width: 50px; height: 50px; color: white;" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+        </svg>
+      </div>
+    }
+    else if (isWarning)
+    {
+      <div style="background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%); border-radius: 50%; padding: 15px; margin-bottom: 8px; box-shadow: 0 6px 16px rgba(255, 167, 38, 0.3);">
+        <svg style="width: 50px; height: 50px; color: white;" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+        </svg>
+      </div>
+    }
+    else
+    {
+      <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); border-radius: 50%; padding: 15px; margin-bottom: 8px; box-shadow: 0 6px 16px rgba(255, 107, 107, 0.3);">
+        <svg style="width: 50px; height: 50px; color: white;" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+        </svg>
+      </div>
+    }
+  </div>
+
+  <!-- Main Title -->
+  <h2 style="font-size: 18px; font-weight: 700; text-align: center; margin: 0; color: #2d3748;">
+    @titleText
+  </h2>
+
+  @foreach (var line in messages) { <div style="text-align: center; font-size: 16px">@line</div> }
+
+  @* Divider *@
+  <div>
+    - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  </div>
+
+  <!-- Product Info Details - Simple List Format -->
+  <div style="width: 100%; margin: 8px 0; text-align: center;">
+    <!-- Serial -->
+    @if (!string.IsNullOrEmpty(s?.Serial))
+    {
+      <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <span style="font-weight: 600; color: #4a5568; font-size: 14px;">Serial : </span>
+        <span id="serial-text" style="font-weight: 700; color: #2d3748; font-family: monospace; font-size: 14px;">@s.Serial</span>
+        <button onclick="copyText('@s.Serial', 'serial')" class="copy-btn" title="Copy Serial">
+          <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+          </svg>
+        </button>
+      </div>
+    }
+
+    <!-- Pin -->
+    @if (!string.IsNullOrEmpty(s?.Pin))
+    {
+      <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <span style="font-weight: 600; color: #4a5568; font-size: 14px;">Pin : </span>
+        <span id="pin-text" style="font-weight: 700; color: #2d3748; font-family: monospace; font-size: 14px;">@s.Pin</span>
+        <button onclick="copyText('@s.Pin', 'pin')" class="copy-btn" title="Copy Pin">
+          <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+          </svg>
+        </button>
+      </div>
+    }
+
+    @if (isWarning) {
+      <!-- Registered At -->
+      @if (p?.ScanItem?.RegisteredDate != null)
+      {
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <span style="font-weight: 600; color: #4a5568; font-size: 14px;">Registered At : </span>
+          <span style="font-weight: 700; color: #2d3748; font-size: 14px;">@p.ScanItem?.RegisteredDate?.ToString("dd MMM yyyy HH:mm", new System.Globalization.CultureInfo("en-US"))</span>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- CTA Button -->
+  <a href="@primaryHref" class="button_product" style="display: block; text-decoration: none; text-align: center;">
+    @primaryText
+  </a>
+
+  <!-- Additional Info Message - Compact -->
+  @if (isSuccess)
+  {
+    <div style="background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border-radius: 8px; padding: 12px; margin-top: 4px; width: 100%; box-sizing: border-box; border-left: 3px solid #48bb78;">
+      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <svg style="width: 20px; height: 20px; color: #48bb78;" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M11,16.5L18,9.5L16.59,8.09L11,13.67L7.91,10.59L6.5,12L11,16.5Z"/>
+          </svg>
+        <div style="color: #2f855a; font-weight: 600; font-size: 13px;">ขอแสดงความยินดี!</div>
+      </div>
+      <div style="color: #2f855a; font-size: 12px; line-height: 1.3;">
+        เพลิดเพลินกับสิทธิพิเศษและข้อเสนอพิเศษของเรา
+      </div>
+    </div>
   }
-  .hero:before{
-    content:""; position:absolute; inset:-1px; border-radius:24px; pointer-events:none;
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.20);
+  else if (isWarning)
+  {
+    <div style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border-radius: 8px; padding: 12px; margin-top: 4px; width: 100%; box-sizing: border-box; border-left: 3px solid #ffa726;">
+      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <svg style="width: 20px; height: 20px; color: #ffa726;" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+          </svg>
+        <div style="color: #e65100; font-weight: 600; font-size: 13px;">ต้องระวัง!</div>
+      </div>
+      <div style="color: #e65100; font-size: 12px; line-height: 1.3;">
+        @(messages.FirstOrDefault() ?? "โค้ดนี้ถูกใช้งานไปแล้ว")
+      </div>
+    </div>
   }
-
-  .bg-success{ background:#16a34a !important; }
-  .bg-error{   background:#dc2626 !important; }
-  .bg-warn{    background:#d97706 !important; }
-
-  .statusWrap{ display:flex; align-items:center; gap:18px; flex-wrap:wrap }
-  .statusIcon{ width:60px; height:60px; opacity:.95; filter:drop-shadow(0 6px 18px rgba(0,0,0,.25)) }
-  .statusCode{ font-weight:900; letter-spacing:1px; line-height:1; font-size:44px; text-transform:uppercase }
-  .statusTitle{ font-size:18px; opacity:.95; margin-top:6px }
-  .lead{ margin-top:14px }
-  .lead .line{ opacity:.98; margin:6px 0 }
-  .cta{ display:flex; gap:10px; flex-wrap:wrap; margin-top:18px }
-  .btn{
-    display:inline-flex; align-items:center; gap:8px; text-decoration:none; border-radius:14px; padding:12px 16px;
-    border:1px solid rgba(255,255,255,.45); background:rgba(255,255,255,.12); color:#fff; backdrop-filter:blur(6px);
-    box-shadow:0 6px 20px rgba(0,0,0,.25);
+  else
+  {
+    <div style="background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%); border-radius: 8px; padding: 12px; margin-top: 4px; width: 100%; box-sizing: border-box; border-left: 3px solid #f56565;">
+      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <svg style="width: 20px; height: 20px; color: #f56565;" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+          </svg>
+        <div style="color: #c53030; font-weight: 600; font-size: 13px;">ต้องการความช่วยเหลือ?</div>
+      </div>
+      <div style="color: #c53030; font-size: 12px; line-height: 1.3;">
+        @(messages.FirstOrDefault() ?? "กรุณาติดต่อทีมงาน")
+      </div>
+    </div>
   }
-  .btn svg{ width:18px; height:18px }
-  .btn:hover{ background:rgba(255,255,255,.18) }
-</style>
+</div>
 
-<div class="container ox-container">
+  <style>
+    .fade-container {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 1s ease-out, transform 1s ease-out;
+    }
+
+    .fade-container.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .button_product {
+      width: 100%;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 12px;
+      background: @(isSuccess ? "linear-gradient(135deg, #6FE10A 0%, #58CD04 100%)" : isWarning ? "linear-gradient(135deg, #ffa726 0%, #ff9800 100%)" : "linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)");
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 3px 8px @(isSuccess ? "rgba(111, 225, 10, 0.25)" : isWarning ? "rgba(255, 167, 38, 0.25)" : "rgba(66, 153, 225, 0.25)");
+      position: relative;
+      overflow: hidden;
+    }
+
+    .button_product::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .button_product:hover {
+      box-shadow: 0 6px 12px @(isSuccess ? "rgba(111, 225, 10, 0.35)" : isWarning ? "rgba(255, 167, 38, 0.35)" : "rgba(66, 153, 225, 0.35)");
+      background: @(isSuccess ? "linear-gradient(135deg, #7FE91A 0%, #68DD14 100%)" : isWarning ? "linear-gradient(135deg, #ffb74d 0%, #ffa726 100%)" : "linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)");
+      color: white;
+      opacity: 0.95;
+    }
+
+    .button_product:hover::before {
+      left: 100%;
+    }
+
+    .button_product:active {
+      transform: translateY(0px);
+      box-shadow: 0 3px 8px @(isSuccess ? "rgba(111, 225, 10, 0.2)" : isWarning ? "rgba(255, 167, 38, 0.2)" : "rgba(66, 153, 225, 0.2)");
+    }
+
+    /* Info card hover effects */
+    .info-detail {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .info-detail:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    /* Copy button styles */
+    .copy-btn {
+      background: transparent;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 4px;
+      cursor: pointer;
+      color: #4a5568;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .copy-btn:hover {
+      background: #f7fafc;
+      border-color: #cbd5e0;
+      color: #2d3748;
+      transform: translateY(-1px);
+    }
+
+    .copy-btn:active {
+      transform: translateY(0);
+      background: #edf2f7;
+    }
+
+    .copy-btn.copied {
+      background: #48bb78;
+      border-color: #48bb78;
+      color: white;
+    }
+
+    /* Responsive design */
+    @@media (max-width: 480px) {
+      #verifyContent {
+        max-width: 340px !important;
+        padding: 20px 16px !important;
+        margin: 8px !important;
+        gap: 10px !important;
+      }
+
+      .button_product {
+        padding: 12px 18px;
+        font-size: 14px;
+      }
+    }
+
+    /* Ensure single page view */
+    @@media (max-height: 800px) {
+      #verifyContent {
+        gap: 8px !important;
+        padding: 20px !important;
+      }
+    }
+  </style>
+
+@if (isSuccess)
+{
+  <!-- Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script>
+    (function () {
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      // ชุดใหญ่ไฟกระพริบครั้งแรก
+      try {
+        confetti({
+          particleCount: 120,
+          spread: 90,
+          startVelocity: 38,
+          origin: { y: 0.6 }
+        });
+
+        // ยิงจากซ้าย-ขวา แบบต่อเนื่อง ~1.5 วิ
+        const duration = 1500;
+        const end = Date.now() + duration;
+
+        (function frame() {
+          confetti({
+            particleCount: 2,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 }
+          });
+          confetti({
+            particleCount: 2,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 }
+          });
+          if (Date.now() < end) requestAnimationFrame(frame);
+        })();
+      } catch (e) {
+        // ถ้าโหลด CDN ไม่สำเร็จ จะไม่พังหน้าจอ
+        console.warn('confetti init failed', e);
+      }
+    })();
+  </script>
+}
+
+  @* Animation fade-in *@
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const content = document.getElementById("verifyContent");
+      setTimeout(() => {
+        content.classList.add("show");
+      }, 300);
+    });
+
+    // Copy function
+    function copyText(text, type) {
+      navigator.clipboard.writeText(text).then(function() {
+        // Show success feedback
+        const buttons = document.querySelectorAll('.copy-btn');
+        buttons.forEach(btn => {
+          if (btn.getAttribute('onclick').includes(type)) {
+            btn.classList.add('copied');
+            btn.innerHTML = '<svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>';
+            setTimeout(() => {
+              btn.classList.remove('copied');
+              btn.innerHTML = '<svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
+            }, 1500);
+          }
+        });
+      }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+        // Fallback for older browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+        } catch (err) {
+          console.error('Fallback: Oops, unable to copy', err);
+        }
+        document.body.removeChild(textArea);
+      });
+    }
+  </script>
+
+@* <div class="container ox-container">
   <div class="hero @heroBg">
     <div class="statusWrap">
       <svg class="statusIcon"><use href="#@iconId" /></svg>
@@ -154,4 +480,4 @@
       <a class="btn" href="@primaryHref"><svg><use href="#i-link"/></svg> @primaryText</a>
     </div>
   </div>
-</div>
+</div> *@
