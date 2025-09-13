@@ -11,16 +11,70 @@ namespace OnixWebScan.Controllers
     {
         [Route("verify")]
         [Route("verify-dev")]
-        public IActionResult Index(string data)
+        public IActionResult Index()
         {
-            if (string.IsNullOrWhiteSpace(data))
-                return BadRequest("Missing 'data'");
+            var queryParams = HttpContext.Request.Query;
+
+            // Case 1: ไม่มี query parameter เลย
+            if (!queryParams.Any())
+            {
+                var vm1 = new VerifyViewModel
+                {
+                    RawJson = "",
+                    Payload = new VerifyPayload { Status = "PARAMETER_MISSING" },
+                    StatusCss = "vx-badge err",
+                    StatusText = "PARAMETER_MISSING",
+                    TtlDisplay = "-"
+                };
+                return View("Verify", vm1);
+            }
+
+            // Case 2: มี query parameter แต่ไม่ใช่ "data"
+            if (!queryParams.ContainsKey("data"))
+            {
+                var vm2 = new VerifyViewModel
+                {
+                    RawJson = "",
+                    Payload = new VerifyPayload { Status = "PARAM_MISSING" },
+                    StatusCss = "vx-badge err",
+                    StatusText = "PARAM_MISSING",
+                    TtlDisplay = "-"
+                };
+                return View("Verify", vm2);
+            }
+
+            var data = queryParams["data"].ToString();
+
+            // Case 3: มี ?data= แต่ไม่มีค่า (empty string)
+            if (string.IsNullOrEmpty(data) || data.Trim() == "")
+            {
+                var vm3 = new VerifyViewModel
+                {
+                    RawJson = "",
+                    Payload = new VerifyPayload { Status = "NO_DATA" },
+                    StatusCss = "vx-badge err",
+                    StatusText = "NO_DATA",
+                    TtlDisplay = "-"
+                };
+                return View("Verify", vm3);
+            }
 
             var key = Environment.GetEnvironmentVariable("ENCRYPTION_KEY");
             var iv  = Environment.GetEnvironmentVariable("ENCRYPTION_IV");
             if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(iv))
-                return StatusCode(500, "Server missing ENCRYPTION_KEY/ENCRYPTION_IV");
+            {
+                var vmConfig = new VerifyViewModel
+                {
+                    RawJson = "",
+                    Payload = new VerifyPayload { Status = "FAILED" },
+                    StatusCss = "vx-badge err",
+                    StatusText = "FAILED / Server Configuration Error",
+                    TtlDisplay = "-"
+                };
+                return View("Verify", vmConfig);
+            }
 
+            // Case 4: มี data แต่ decrypt ไม่ผ่าน
             string decrypted;
             try
             {
@@ -28,7 +82,15 @@ namespace OnixWebScan.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(400, $"Decrypt error: {ex.Message}");
+                var vm4 = new VerifyViewModel
+                {
+                    RawJson = $"Decrypt Error: {ex.Message}",
+                    Payload = new VerifyPayload { Status = "DECRYPT_FAIL" },
+                    StatusCss = "vx-badge err",
+                    StatusText = "DECRYPT_FAIL",
+                    TtlDisplay = "-"
+                };
+                return View("Verify", vm4);
             }
 
             VerifyPayload? payload = null;
@@ -40,6 +102,16 @@ namespace OnixWebScan.Controllers
             }
             catch
             {
+                // Case 4: decrypt ได้แต่ parse JSON ไม่ได้
+                var vm4 = new VerifyViewModel
+                {
+                    RawJson = decrypted,
+                    Payload = new VerifyPayload { Status = "INVALID" },
+                    StatusCss = "vx-badge err",
+                    StatusText = "INVALID / JSON Parse Error",
+                    TtlDisplay = "-"
+                };
+                return View("Verify", vm4);
             }
 
             var (cls, text) = MapStatus(payload?.Status);
@@ -53,6 +125,18 @@ namespace OnixWebScan.Controllers
                 StatusText = $"{text} / {payload?.Status ?? "INFO"}",
                 TtlDisplay = ttlDisplay
             };
+
+
+            // logging vm as JSON
+            try
+            {
+                var logJson = JsonSerializer.Serialize(vm, new JsonSerializerOptions { WriteIndented = true });
+                Console.WriteLine($"VerifyViewModel: {logJson}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"VerifyViewModel log error: {ex.Message}");
+            }
 
             return View("Verify", vm);
         }
@@ -123,10 +207,18 @@ namespace OnixWebScan.Controllers
         {
             return status switch
             {
-                "OK"                 => ("vx-badge ok",   "OK"),
-                "ALREADY_REGISTERED" => ("vx-badge warn", "Already registered"),
-                "ERROR"              => ("vx-badge err",  "Error"),
-                _                    => ("vx-badge warn", "Info"),
+                "OK" or "SUCCESS" or "VALID"   => ("vx-badge ok",   "OK"),
+                "ALREADY_REGISTERED"           => ("vx-badge warn", "Already registered"),
+                "NOTFOUND"                     => ("vx-badge err",  "Not found"),
+                "PARAM_MISSING"                => ("vx-badge err",  "Parameter missing"),
+                "PARAMETER_MISSING"            => ("vx-badge err",  "Parameter missing"),
+                "NO_DATA"                      => ("vx-badge err",  "No data"),
+                "DECRYPT_FAIL"                 => ("vx-badge err",  "Decrypt failed"),
+                "DECRYPT_ERROR"                => ("vx-badge err",  "Decrypt error"),
+                "INVALID"                      => ("vx-badge err",  "Invalid"),
+                "FAILED"                       => ("vx-badge err",  "Failed"),
+                "ERROR"                        => ("vx-badge err",  "Error"),
+                _                              => ("vx-badge warn", "Info"),
             };
         }
 

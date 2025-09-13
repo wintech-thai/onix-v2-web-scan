@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="scan-static/lib/bootstrap/dist/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="scan-static/css/site.css" asp-append-version="true" />
+  <link rel="stylesheet" href="/scan-static/lib/bootstrap/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="/scan-static/css/site.css" asp-append-version="true" />
 
   <style>
     html, body { height:100%; }
@@ -28,16 +28,53 @@
     }
 
     .ox-header.navbar{
-      background:#fff;border-bottom:1px solid #e6e8ef;box-shadow:0 4px 14px rgba(0,0,0,.04);
+      background: #183153;
+      border-bottom: 1px solid #25406b;
+      box-shadow: 0 4px 14px rgba(24,49,83,0.08);
     }
-    .ox-brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px;color:#0f172a!important;text-decoration:none}
-    .ox-brand-badge{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#111827;color:#fff;font-size:14px;font-weight:700}
-    .ox-link{font-weight:600;color:#334155!important}.ox-link:hover{color:#111827!important}
 
-    .ox-container{max-width:960px}
+    .ox-brand{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      letter-spacing: .2px;
+      color: #f3f7fa !important;
+      text-decoration: none;
+    }
+
+    .ox-brand-badge{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.10);
+    }
+
+    .ox-link{
+      font-weight: 600;
+      color: #b6c6e3 !important;
+      transition: color 0.2s;
+    }
+
+    .ox-link:hover{
+      color: #fff !important;
+    }
+
+    .ox-container{
+      max-width:960px
+    }
 
     /* main ปกติ */
-    .ox-main{ padding:18px 0 28px }
+    .ox-main{
+      padding:18px 0 28px
+    }
 
     /* main แบบ “จัดกลางเป๊ะ” ใช้เฉพาะหน้าที่เซ็ต ViewData["MainClass"] */
     .ox-main--center{
@@ -47,9 +84,27 @@
       min-height:100%;           /* สูงเท่าพื้นที่ระหว่าง header กับ footer */
     }
 
-    .ox-footer{border-top:1px solid #e6e8ef;background:#fff}
-    .ox-footer .inner{max-width:960px;padding:14px 0;color:#64748b;font-size:14px}
-    .ox-footer a{color:#475569;text-decoration:none}.ox-footer a:hover{color:#111827}
+    .ox-footer{
+      border-top: 1px solid #25406b;
+      background: #183153;
+    }
+
+    .ox-footer .inner{
+      max-width: 960px;
+      padding: 14px 0;
+      color: #b6c6e3;
+      font-size: 14px;
+    }
+
+    .ox-footer a{
+      color: #b6c6e3;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .ox-footer a:hover{
+      color: #fff;
+    }
   </style>
 </head>
 
@@ -80,15 +135,15 @@
   </main>
 
   <footer class="ox-footer">
-    <div class="container ox-container inner d-flex justify-content-between align-items-center">
+    <div class="container ox-container inner d-flex justify-content-between align-items-center" style="padding: 12px 8px;">
       <div>© @DateTime.Now.Year Please Scan</div>
       <div><a asp-area="" asp-controller="Home" asp-action="Privacy">นโยบายความเป็นส่วนตัว</a></div>
     </div>
   </footer>
 
-  <script src="scan-static/lib/jquery/dist/jquery.min.js"></script>
-  <script src="scan-static/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="scan-static/js/site.js" asp-append-version="true"></script>
+  <script src="/scan-static/lib/jquery/dist/jquery.min.js"></script>
+  <script src="/scan-static/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/scan-static/js/site.js" asp-append-version="true"></script>
   @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
