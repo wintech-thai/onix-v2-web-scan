@@ -58,11 +58,11 @@
     switch (rawStatus)
     {
       case "ALREADY_REGISTERED":
-        messages.Add("โค้ดนี้ถูกใช้งานไปก่อนหน้าหรืออาจถูกลงทะเบียนโดยผู้อื่น");
+        messages.Add("หรือโค้ดนี้ถูกใช้งานไปก่อนหน้า อาจถูกลงทะเบียนโดยผู้อื่น");
         messages.Add("กรุณาติดต่อทีมงานเพื่อช่วยตรวจสอบเพิ่มเติม");
         break;
       case "NOTFOUND":
-        messages.Add("ไม่พบข้อมูลสินค้านี้ในระบบ สินค้าอาจไม่ได้ลงทะเบียนในระบบ");
+        messages.Add("ไม่พบข้อมูลสินค้านี้ในระบบ สินค้าอาจไม่ได้ลงทะเบียนในระบบ หรือข้อมูลอาจผิดพลาด");
         @* messages.Add("สินค้าอาจไม่ได้ลงทะเบียนในระบบ หรือข้อมูลอาจผิดพลาด"); *@
         break;
       case "PARAM_MISSING":
@@ -114,37 +114,43 @@
 }
 
 <div
-  id="verifyContent" class="fade-container"
-  style="max-width: 400px; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; margin: 0px auto;"
+  id="verifyContent"
+  class="fade-container d-flex flex-column gap-3 align-items-center justify-content-center mx-auto"
+  style="max-width:400px;"
 >
 
   <!-- Status Badge -->
-  <div style="background: @(isSuccess ? "linear-gradient(135deg, #6FE10A 0%, #58CD04 100%)" : isWarning ? "linear-gradient(135deg, #ffa726 0%, #ff9800 100%)" : "linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)"); color: white; padding: 6px 16px; border-radius: 16px; font-size: 16px; font-weight: 600; margin-bottom: 4px; box-shadow: 0 3px 8px @(isSuccess ? "rgba(111, 225, 10, 0.3)" : isWarning ? "rgba(255, 167, 38, 0.3)" : "rgba(255, 107, 107, 0.3)");">
+  <div
+    class="text-white px-3 py-1 rounded-pill fw-semibold shadow-sm mb-1"
+    style="background:@(isSuccess ? "linear-gradient(135deg,#6FE10A 0%,#58CD04 100%)" : isWarning ? "linear-gradient(135deg,#ffa726 0%,#ff9800 100%)" : "linear-gradient(135deg,#ff6b6b 0%,#ee5a24 100%)"); box-shadow:0 3px 8px @(isSuccess ? "rgba(111,225,10,.3)" : isWarning ? "rgba(255,167,38,.3)" : "rgba(255,107,107,.3)");">
     @(isSuccess ? "✓ ตรวจสอบสำเร็จ" : isWarning ? "⚠️ ระวัง" : "⚠️ พบปัญหา")
   </div>
 
-  <!-- Success Icon -->
-  <div style="position: relative;">
+  <!-- Success/Warning/Error Icon -->
+  <div class="position-relative">
     @if (isSuccess)
     {
-      <div style="background: linear-gradient(135deg, #6FE10A 0%, #58CD04 100%); border-radius: 50%; padding: 15px; margin-bottom: 8px; box-shadow: 0 6px 16px rgba(111, 225, 10, 0.3);">
-        <svg style="width: 50px; height: 50px; color: white;" fill="currentColor" viewBox="0 0 24 24">
+      <div class="rounded-circle p-3 mb-2 shadow"
+           style="background:linear-gradient(135deg,#6FE10A 0%,#58CD04 100%); box-shadow:0 6px 16px rgba(111,225,10,.3);">
+        <svg class="text-white" style="width:50px;height:50px;" fill="currentColor" viewBox="0 0 24 24">
           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
         </svg>
       </div>
     }
     else if (isWarning)
     {
-      <div style="background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%); border-radius: 50%; padding: 15px; margin-bottom: 8px; box-shadow: 0 6px 16px rgba(255, 167, 38, 0.3);">
-        <svg style="width: 50px; height: 50px; color: white;" fill="currentColor" viewBox="0 0 24 24">
+      <div class="rounded-circle p-3 mb-2 shadow"
+           style="background:linear-gradient(135deg,#ffa726 0%,#ff9800 100%); box-shadow:0 6px 16px rgba(255,167,38,.3);">
+        <svg class="text-white" style="width:50px;height:50px;" fill="currentColor" viewBox="0 0 24 24">
           <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
         </svg>
       </div>
     }
     else
     {
-      <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); border-radius: 50%; padding: 15px; margin-bottom: 8px; box-shadow: 0 6px 16px rgba(255, 107, 107, 0.3);">
-        <svg style="width: 50px; height: 50px; color: white;" fill="currentColor" viewBox="0 0 24 24">
+      <div class="rounded-circle p-3 mb-2 shadow"
+           style="background:linear-gradient(135deg,#ff6b6b 0%,#ee5a24 100%); box-shadow:0 6px 16px rgba(255,107,107,.3);">
+        <svg class="text-white" style="width:50px;height:50px;" fill="currentColor" viewBox="0 0 24 24">
           <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
         </svg>
       </div>
@@ -152,27 +158,28 @@
   </div>
 
   <!-- Main Title -->
-  <h2 style="font-size: 18px; font-weight: 700; text-align: center; margin: 0; color: #2d3748;">
+  <h2 class="fs-5 fw-bold text-center text-dark mb-0">
     @titleText
   </h2>
 
-  @foreach (var line in messages) { <div style="text-align: center; font-size: 16px">@line</div> }
+  @foreach (var line in messages)
+  {
+    <div class="text-center fs-6">@line</div>
+  }
 
-  @* Divider *@
-  <div>
-    - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  </div>
+  <!-- Divider -->
+  <hr class="w-100 my-2" />
 
-  <!-- Product Info Details - Simple List Format -->
-  <div style="width: 100%; margin: 8px 0; text-align: center;">
+  <!-- Product Info Details -->
+  <div class="w-100 my-2 text-center">
     <!-- Serial -->
     @if (!string.IsNullOrEmpty(s?.Serial))
     {
-      <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <span style="font-weight: 600; color: #4a5568; font-size: 14px;">Serial : </span>
-        <span id="serial-text" style="font-weight: 700; color: #2d3748; font-family: monospace; font-size: 14px;">@s.Serial</span>
-        <button onclick="copyText('@s.Serial', 'serial')" class="copy-btn" title="Copy Serial">
-          <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 24 24">
+      <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+        <span class="fw-semibold text-secondary small">Serial :</span>
+        <span id="serial-text" class="fw-bold text-dark font-monospace small">@s.Serial</span>
+        <button onclick="copyText('@s.Serial','serial')" class="btn btn-outline-secondary btn-sm p-1 d-inline-flex align-items-center justify-content-center" title="Copy Serial" aria-label="Copy Serial">
+          <svg style="width:16px;height:16px;" fill="currentColor" viewBox="0 0 24 24">
             <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
           </svg>
         </button>
@@ -182,78 +189,95 @@
     <!-- Pin -->
     @if (!string.IsNullOrEmpty(s?.Pin))
     {
-      <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <span style="font-weight: 600; color: #4a5568; font-size: 14px;">Pin : </span>
-        <span id="pin-text" style="font-weight: 700; color: #2d3748; font-family: monospace; font-size: 14px;">@s.Pin</span>
-        <button onclick="copyText('@s.Pin', 'pin')" class="copy-btn" title="Copy Pin">
-          <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 24 24">
+      <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+        <span class="fw-semibold text-secondary small">Pin :</span>
+        <span id="pin-text" class="fw-bold text-dark font-monospace small">@s.Pin</span>
+        <button onclick="copyText('@s.Pin','pin')" class="btn btn-outline-secondary btn-sm p-1 d-inline-flex align-items-center justify-content-center" title="Copy Pin" aria-label="Copy Pin">
+          <svg style="width:16px;height:16px;" fill="currentColor" viewBox="0 0 24 24">
             <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
           </svg>
         </button>
       </div>
     }
 
-    @if (isWarning) {
-      <!-- Registered At -->
-      @if (p?.ScanItem?.RegisteredDate != null)
-      {
-        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <span style="font-weight: 600; color: #4a5568; font-size: 14px;">Registered At : </span>
-          <span style="font-weight: 700; color: #2d3748; font-size: 14px;">@p.ScanItem?.RegisteredDate?.ToString("dd MMM yyyy HH:mm", new System.Globalization.CultureInfo("en-US"))</span>
-        </div>
-      }
+    @if (isWarning && p?.ScanItem?.RegisteredDate != null)
+    {
+      <div class="d-flex align-items-center justify-content-center gap-2">
+        <span class="fw-semibold text-secondary small">Registered At :</span>
+        <span class="fw-bold text-dark small">
+          @p.ScanItem?.RegisteredDate?.ToLocalTime().ToString("dd MMM yyyy HH:mm zzz")
+        </span>
+      </div>
     }
   </div>
 
   <!-- CTA Button -->
-  <a href="@primaryHref" class="button_product" style="display: block; text-decoration: none; text-align: center;">
-    @primaryText
-  </a>
+  @if (isSuccess || isWarning)
+  {
+    <button type="button"
+            class="btn btn-success button_product border-0"
+            data-bs-toggle="modal"
+            data-bs-target="#productModal">
+      <i class="fas fa-box-open me-2"></i>ดูข้อมูลสินค้า
+    </button>
+  }
+  else
+  {
+    <a href="@primaryHref"
+       class="button_product btn btn-primary w-100 text-center"
+       style="text-decoration:none;">
+      @primaryText
+    </a>
+  }
 
-  <!-- Additional Info Message - Compact -->
+  <!-- Additional Info Message -->
   @if (isSuccess)
   {
-    <div style="background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border-radius: 8px; padding: 12px; margin-top: 4px; width: 100%; box-sizing: border-box; border-left: 3px solid #48bb78;">
-      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-          <svg style="width: 20px; height: 20px; color: #48bb78;" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M11,16.5L18,9.5L16.59,8.09L11,13.67L7.91,10.59L6.5,12L11,16.5Z"/>
-          </svg>
-        <div style="color: #2f855a; font-weight: 600; font-size: 13px;">ขอแสดงความยินดี!</div>
+    <div class="alert p-3 w-100 border-0 mb-0 border-start border-3 border-success"
+         style="background:linear-gradient(135deg,#f0fff4 0%,#c6f6d5 100%);">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <svg class="text-success" style="width:20px;height:20px;" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M11,16.5L18,9.5L16.59,8.09L11,13.67L7.91,10.59L6.5,12L11,16.5Z"/>
+        </svg>
+        <div class="text-success fw-semibold small">ขอแสดงความยินดี!</div>
       </div>
-      <div style="color: #2f855a; font-size: 12px; line-height: 1.3;">
+      <div class="text-success small lh-sm">
         เพลิดเพลินกับสิทธิพิเศษและข้อเสนอพิเศษของเรา
       </div>
     </div>
   }
   else if (isWarning)
   {
-    <div style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border-radius: 8px; padding: 12px; margin-top: 4px; width: 100%; box-sizing: border-box; border-left: 3px solid #ffa726;">
-      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-          <svg style="width: 20px; height: 20px; color: #ffa726;" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-          </svg>
-        <div style="color: #e65100; font-weight: 600; font-size: 13px;">ต้องระวัง!</div>
+    <div class="alert p-3 w-100 border-0 mb-0 border-start border-3"
+         style="--bs-border-opacity:1;border-color:#ffa726;background:linear-gradient(135deg,#fff8e1 0%,#ffecb3 100%);">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <svg class="text-warning" style="width:20px;height:20px;color:#ffa726;" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+        </svg>
+        <div class="fw-semibold small" style="color:#e65100;">ต้องระวัง!</div>
       </div>
-      <div style="color: #e65100; font-size: 12px; line-height: 1.3;">
+      <div class="small lh-sm" style="color:#e65100;">
         @(messages.FirstOrDefault() ?? "โค้ดนี้ถูกใช้งานไปแล้ว")
       </div>
     </div>
   }
   else
   {
-    <div style="background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%); border-radius: 8px; padding: 12px; margin-top: 4px; width: 100%; box-sizing: border-box; border-left: 3px solid #f56565;">
-      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-          <svg style="width: 20px; height: 20px; color: #f56565;" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
-          </svg>
-        <div style="color: #c53030; font-weight: 600; font-size: 13px;">ต้องการความช่วยเหลือ?</div>
+    <div class="alert p-3 w-100 border-0 mb-0 border-start border-3 border-danger"
+         style="background:linear-gradient(135deg,#fed7d7 0%,#feb2b2 100%);">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <svg class="text-danger" style="width:20px;height:20px;" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+        </svg>
+        <div class="text-danger fw-semibold small">ต้องการความช่วยเหลือ?</div>
       </div>
-      <div style="color: #c53030; font-size: 12px; line-height: 1.3;">
+      <div class="text-danger small lh-sm">
         @(messages.FirstOrDefault() ?? "กรุณาติดต่อทีมงาน")
       </div>
     </div>
   }
 </div>
+
 
   <style>
     .fade-container {
@@ -318,38 +342,6 @@
     .info-detail:hover {
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-
-    /* Copy button styles */
-    .copy-btn {
-      background: transparent;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 4px;
-      cursor: pointer;
-      color: #4a5568;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .copy-btn:hover {
-      background: #f7fafc;
-      border-color: #cbd5e0;
-      color: #2d3748;
-      transform: translateY(-1px);
-    }
-
-    .copy-btn:active {
-      transform: translateY(0);
-      background: #edf2f7;
-    }
-
-    .copy-btn.copied {
-      background: #48bb78;
-      border-color: #48bb78;
-      color: white;
     }
 
     /* Responsive design */
@@ -431,38 +423,207 @@
 
     // Copy function
     function copyText(text, type) {
-      navigator.clipboard.writeText(text).then(function() {
-        // Show success feedback
-        const buttons = document.querySelectorAll('.copy-btn');
-        buttons.forEach(btn => {
-          if (btn.getAttribute('onclick').includes(type)) {
-            btn.classList.add('copied');
-            btn.innerHTML = '<svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>';
-            setTimeout(() => {
-              btn.classList.remove('copied');
-              btn.innerHTML = '<svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
-            }, 1500);
+      navigator.clipboard.writeText(text)
+    }
+
+    // Initialize carousel when modal is shown
+    document.addEventListener('DOMContentLoaded', function() {
+      const productModal = document.getElementById('productModal');
+      if (productModal) {
+        productModal.addEventListener('shown.bs.modal', function () {
+          const carousel = document.querySelector('#productCarousel');
+          if (carousel) {
+            // Re-initialize Bootstrap carousel
+            const bootstrapCarousel = new bootstrap.Carousel(carousel, {
+              interval: 5000,
+              ride: 'carousel',
+              wrap: true,
+              keyboard: true,
+              pause: 'hover'
+            });
           }
         });
-      }).catch(function(err) {
-        console.error('Could not copy text: ', err);
-        // Fallback for older browsers
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        try {
-          document.execCommand('copy');
-        } catch (err) {
-          console.error('Fallback: Oops, unable to copy', err);
-        }
-        document.body.removeChild(textArea);
-      });
-    }
+      }
+    });
   </script>
 
-@* <div class="container ox-container">
+<!-- Modal (Bootstrap utilities + inline สำหรับ gradient/custom) -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+  <div class="modal-dialog @(p?.ProductData?.Item == null ? "modal-md" : "modal-xl") modal-fullscreen-xl-down modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4 shadow-lg">
+      <div class="modal-header text-white rounded-top-4 border-0" style="background:#183153;">
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4" style="background:#f7f8fb;">
+        @if (p?.ProductData?.Item != null)
+        {
+          var product = p.ProductData.Item;
+          var images  = p.ProductData.Images ?? new List<ProductImage>();
+          var props   = product?.PropertiesObj;
+
+          <div class="row">
+            <!-- LEFT -->
+            <div class="col-12 col-lg-6 text-center">
+              @if (images.Any())
+              {
+                var carouselId = "productCarousel";
+                <div id="@carouselId" class="carousel slide mb-3 rounded-3 shadow-sm bg-white overflow-hidden"
+                     data-bs-ride="carousel" data-bs-touch="true" data-bs-interval="5000">
+                  <div class="carousel-inner">
+                    @for (int i = 0; i < images.Count; i++)
+                    {
+                      var img = images[i];
+                      <div class="carousel-item @(i == 0 ? "active" : "") position-relative">
+                        <img src="@img.ImageUrl"
+                             class="d-block w-100"
+                             alt="Product Image @(i+1)"
+                             style="height:420px;object-fit:cover;"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        @if (!string.IsNullOrEmpty(img.Narative))
+                        {
+                          <div class="position-absolute bottom-0 start-0 end-0 p-2 text-white fs-6"
+                               style="background:linear-gradient(transparent,rgba(0,0,0,.72));">
+                            @img.Narative
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  @if (images.Count > 1)
+                  {
+                    <button class="carousel-control-prev bg-dark bg-opacity-50 rounded-end" type="button"
+                            data-bs-target="#@carouselId" data-bs-slide="prev" style="width:50px;height:60px;top:50%;transform:translateY(-50%);left:10px;">
+                      <span class="carousel-control-prev-icon"></span>
+                      <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next bg-dark bg-opacity-50 rounded-start" type="button"
+                            data-bs-target="#@carouselId" data-bs-slide="next" style="width:50px;height:60px;top:50%;transform:translateY(-50%);right:10px;">
+                      <span class="carousel-control-next-icon"></span>
+                      <span class="visually-hidden">Next</span>
+                    </button>
+                  }
+                </div>
+              }
+
+              <!-- Meta -->
+              <div class="row g-2 mt-3">
+                <div class="col-12 col-lg-6">
+                  <div class="bg-white p-3 rounded-3 shadow-sm">
+                    <div class="small text-muted">ผู้ผลิต</div>
+                    <div class="fw-semibold text-dark">@(product?.OrgId ?? "-")</div>
+                  </div>
+                </div>
+                <div class="col-12 col-lg-6">
+                  <div class="bg-white p-3 rounded-3 shadow-sm">
+                    <div class="small text-muted">อัปเดตล่าสุด</div>
+                    <div class="fw-semibold text-dark">@(product?.UpdatedDate?.ToLocalTime().ToString("dd MMM yyyy HH:mm zzz") ?? "-")</div>
+                  </div>
+                </div>
+              </div>
+
+              @if (!string.IsNullOrWhiteSpace(product?.PropertiesObj?.SupplierUrl))
+              {
+                <div class="mt-2">
+                  <a href="@product.PropertiesObj.SupplierUrl" target="_blank" class="fs-6 text-primary text-decoration-none">รายละเอียดเพิ่มเติมของสินค้า</a>
+                </div>
+              }
+            </div>
+
+            <!-- RIGHT -->
+            <div class="col-12 col-lg-6 mt-4 mt-lg-0">
+              <h4 class="fw-bold text-dark fs-3 mb-3">@(product?.Code ?? "-")</h4>
+              <p class="text-muted fs-5 mb-3">@(product?.Description ?? product?.Narrative ?? "ไม่มีคำอธิบาย")</p>
+
+              <!-- Specs -->
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <div class="bg-white p-3 rounded-3 shadow-sm text-center">
+                    <div class="text-primary fs-5 mb-1">🏷️</div>
+                    <div class="fw-semibold text-dark fs-6">ประเภทสินค้า</div>
+                    <div class="text-muted fs-6">@(product?.PropertiesObj?.Category ?? "-")</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="bg-white p-3 rounded-3 shadow-sm text-center">
+                    <div class="text-primary fs-5 mb-1">❓</div>
+                    <div class="fw-semibold text-dark fs-6">ความสูง</div>
+                    <div class="text-muted fs-6">@(product?.PropertiesObj?.Height > 0 ? $"{product.PropertiesObj.Height} {(product?.PropertiesObj?.DimentionUnit ?? "cm")}" : "-")</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="bg-white p-3 rounded-3 shadow-sm text-center">
+                    <div class="text-primary fs-5 mb-1">📐</div>
+                    <div class="fw-semibold text-dark fs-6">ความกว้าง</div>
+                    <div class="text-muted fs-6">@(props?.Width > 0 ? $"{props.Width} {(props?.DimentionUnit ?? "cm")}" : "-")</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="bg-white p-3 rounded-3 shadow-sm text-center">
+                    <div class="text-primary fs-5 mb-1">⚖️</div>
+                    <div class="fw-semibold text-dark fs-6">น้ำหนัก</div>
+                    <div class="text-muted fs-6">@(props?.Weight > 0 ? $"{props.Weight} {(props?.WeightUnit ?? "g")}" : "-")</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Features -->
+              @if (!string.IsNullOrEmpty(product?.Narrative))
+              {
+                var bullets = product.Narrative.Split('|', StringSplitOptions.RemoveEmptyEntries);
+                <div class="bg-white p-4 rounded-3 shadow-sm">
+                  <h6 class="fw-semibold text-dark fs-5 mb-3">คุณสมบัติเด่น</h6>
+                  @if (bullets.Length > 0)
+                  {
+                    <div class="d-grid gap-2">
+                      @foreach (var b in bullets)
+                      {
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="rounded-circle" style="width:6px;height:6px;background:#6FE10A;"></div>
+                          <span class="text-secondary fs-6">@b.Trim()</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                  else
+                  {
+                    <div class="text-muted fs-6">@product.Narrative</div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+        else
+        {
+          <div class="p-5 my-4 text-center">
+            <svg class="mb-3 text-danger" style="width:64px;height:64px;" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2M13,13H11V7h2v6m0,4H11v-2h2v2z"/>
+            </svg>
+            <h5 class="fw-bold text-danger mb-2">ไม่พบข้อมูลสินค้า</h5>
+            <p class="fs-6 text-muted mb-0">ขออภัย ไม่สามารถโหลดข้อมูลสินค้าได้ในขณะนี้</p>
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer border-0 rounded-bottom-4 p-3 bg-white">
+        <button type="button" class="btn btn-light text-muted fw-medium px-3 py-2 rounded-2" data-bs-dismiss="modal">ปิด</button>
+        @if (!string.IsNullOrWhiteSpace(p?.ProductData?.Item?.PropertiesObj?.SupplierUrl)) {
+            <a href="@p.ProductData.Item.PropertiesObj.SupplierUrl" target="_blank"
+               class="btn text-white fw-medium px-3 py-2 rounded-2"
+               style="background:#183153; text-decoration:none;">
+                เว็บไซต์ผู้ผลิต
+            </a>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+@* <div class="container ox-container":
   <div class="hero @heroBg">
     <div class="statusWrap">
       <svg class="statusIcon"><use href="#@iconId" /></svg>
