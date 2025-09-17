@@ -22,6 +22,7 @@ public sealed class VerifyPayload
     public string? DescriptionEng  { get; set; }
     public ScanItem? ScanItem { get; set; }
     public string? RedirectUrl { get; set; }
+    public string? GetProductUrl { get; set; }
     public DateTimeOffset? DataGeneratedDate { get; set; }
     public int? TtlMinute { get; set; }
 }

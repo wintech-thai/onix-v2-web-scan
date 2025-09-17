@@ -93,6 +93,7 @@ namespace OnixWebScan.Controllers
             try
             {
                 decrypted = EncryptionUtils.Decrypt(data, key!, iv!);
+//Console.WriteLine($"Decrypted: {decrypted}");
             }
             catch (Exception ex)
             {
