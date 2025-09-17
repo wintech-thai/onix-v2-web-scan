@@ -15,9 +15,15 @@ namespace OnixWebScan.Controllers
             return;
         }
 
+        private readonly HttpClient _httpClient;
+
+        public VerifyController(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
         [Route("verify")]
         [Route("verify-dev")]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             var queryParams = HttpContext.Request.Query;
 
@@ -93,6 +99,7 @@ namespace OnixWebScan.Controllers
             try
             {
                 decrypted = EncryptionUtils.Decrypt(data, key!, iv!);
+//Console.WriteLine($"Decrypted: {decrypted}");
             }
             catch (Exception ex)
             {
@@ -135,6 +142,14 @@ namespace OnixWebScan.Controllers
             var (cls, text) = MapStatus(payload?.Status);
             var ttlDisplay  = BuildTtl(payload?.DataGeneratedDate, payload?.TtlMinute);
 
+            // เรียก Product API ถ้าสถานะ SUCCESS และมีข้อมูล Serial/Pin
+            if (payload?.ScanItem != null)
+            {
+                await FetchProductData(payload);
+            }
+
+            // Console.WriteLine($"Payload: {JsonSerializer.Serialize(payload)}");
+
             var vm = new VerifyViewModel
             {
                 RawJson    = decrypted,
@@ -146,15 +161,15 @@ namespace OnixWebScan.Controllers
 
 
             // logging vm as JSON
-            try
-            {
-                var logJson = JsonSerializer.Serialize(vm, new JsonSerializerOptions { WriteIndented = true });
-                //Console.WriteLine($"VerifyViewModel: {logJson}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"VerifyViewModel log error: {ex.Message}");
-            }
+            // try
+            // {
+            //     var logJson = JsonSerializer.Serialize(vm, new JsonSerializerOptions { WriteIndented = true });
+            //     // Console.WriteLine($"VerifyViewModel: {logJson}");
+            // }
+            // catch (Exception ex)
+            // {
+            //     Console.WriteLine($"VerifyViewModel log error: {ex.Message}");
+            // }
 
             SetCustomStatus("SUCCESS");
             return View("Verify", vm);
@@ -218,6 +233,45 @@ namespace OnixWebScan.Controllers
         {
             // ใช้พารามิเตอร์แบบเดียวกับ OpenExternal
             return OpenExternal(u);
+        }
+
+        // ===== Product API Methods =====
+
+        private async Task FetchProductData(VerifyPayload payload)
+        {
+            try
+            {
+                var apiUrl = payload.GetProductUrl;
+
+                if (string.IsNullOrWhiteSpace(apiUrl))
+                {
+                    Console.WriteLine("GetProductUrl is missing or empty");
+                    return;
+                }
+
+                Console.WriteLine($"Calling Product API: {apiUrl}");
+
+                var response = await _httpClient.GetAsync(apiUrl);
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Product API Response: {jsonContent}");
+
+                    var productData = JsonSerializer.Deserialize<ProductApiResponse>(
+                        jsonContent,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    payload.ProductData = productData;
+                }
+                else
+                {
+                    Console.WriteLine($"Product API failed with status: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calling Product API: {ex.Message}");
+            }
         }
 
         // ===== Utilities =====
