@@ -1,9 +1,17 @@
+using Serilog;
 using Microsoft.Extensions.FileProviders;
+using OnixWebScan.AuditLogs;
+
+var log = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateLogger();
+Log.Logger = log;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
@@ -25,6 +33,7 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseMiddleware<AuditLogMiddleware>();
 
 app.UseRouting();
 

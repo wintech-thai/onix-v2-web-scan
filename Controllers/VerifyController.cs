@@ -9,6 +9,12 @@ namespace OnixWebScan.Controllers
 {
     public class VerifyController : Controller
     {
+        private void SetCustomStatus(string status)
+        {
+            Response.Headers.Append("CUST_STATUS", status);
+            return;
+        }
+
         [Route("verify")]
         [Route("verify-dev")]
         public IActionResult Index()
@@ -26,6 +32,8 @@ namespace OnixWebScan.Controllers
                     StatusText = "PARAMETER_MISSING",
                     TtlDisplay = "-"
                 };
+
+                SetCustomStatus("ERR_PARAMETER_MISSING");
                 return View("Verify", vm1);
             }
 
@@ -40,6 +48,8 @@ namespace OnixWebScan.Controllers
                     StatusText = "PARAM_MISSING",
                     TtlDisplay = "-"
                 };
+
+                SetCustomStatus("ERR_DATA_MISSING");
                 return View("Verify", vm2);
             }
 
@@ -56,6 +66,8 @@ namespace OnixWebScan.Controllers
                     StatusText = "NO_DATA",
                     TtlDisplay = "-"
                 };
+
+                SetCustomStatus("ERR_DATA_EMPTY");
                 return View("Verify", vm3);
             }
 
@@ -71,6 +83,8 @@ namespace OnixWebScan.Controllers
                     StatusText = "FAILED / Server Configuration Error",
                     TtlDisplay = "-"
                 };
+
+                SetCustomStatus("ERR_MISSING_DECRYPT_KEY");
                 return View("Verify", vmConfig);
             }
 
@@ -90,6 +104,8 @@ namespace OnixWebScan.Controllers
                     StatusText = "DECRYPT_FAIL",
                     TtlDisplay = "-"
                 };
+
+                SetCustomStatus("ERR_UANBLE_TO_DECRYPT");
                 return View("Verify", vm4);
             }
 
@@ -111,6 +127,8 @@ namespace OnixWebScan.Controllers
                     StatusText = "INVALID / JSON Parse Error",
                     TtlDisplay = "-"
                 };
+
+                SetCustomStatus("ERR_INVALID_JSON");
                 return View("Verify", vm4);
             }
 
@@ -131,13 +149,14 @@ namespace OnixWebScan.Controllers
             try
             {
                 var logJson = JsonSerializer.Serialize(vm, new JsonSerializerOptions { WriteIndented = true });
-                Console.WriteLine($"VerifyViewModel: {logJson}");
+                //Console.WriteLine($"VerifyViewModel: {logJson}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"VerifyViewModel log error: {ex.Message}");
             }
 
+            SetCustomStatus("SUCCESS");
             return View("Verify", vm);
         }
 
