@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -32,6 +33,7 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseHttpsRedirection();
+app.MapHealthChecks("/health");
 app.UseStaticFiles();
 app.UseMiddleware<AuditLogMiddleware>();
 

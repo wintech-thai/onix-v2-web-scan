@@ -105,6 +105,12 @@ namespace OnixWebScan.AuditLogs
                 userInfo = new UserInfo(),
             };
 
+            if (path == "/health")
+            {
+                //No need for audit log
+                return;
+            }
+
             var logJson = JsonSerializer.Serialize(logObject);
             Log.Information(logJson);
 
