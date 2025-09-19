@@ -21,8 +21,8 @@ namespace OnixWebScan.Controllers
         {
             _httpClient = httpClient;
         }
+
         [Route("verify")]
-        [Route("verify-dev")]
         public async Task<IActionResult> Index()
         {
             var queryParams = HttpContext.Request.Query;
@@ -175,7 +175,7 @@ namespace OnixWebScan.Controllers
             return View("Verify", vm);
         }
 
-
+/*
         /// <summary>
         /// เปิดลิงก์ภายนอกโดยให้หลังบ้าน redirect (ไม่ให้หน้า View ยิงตรง)
         /// พารามิเตอร์ u = Base64(UTF8(url)) แล้ว URL-encode อีกชั้น
@@ -234,7 +234,7 @@ namespace OnixWebScan.Controllers
             // ใช้พารามิเตอร์แบบเดียวกับ OpenExternal
             return OpenExternal(u);
         }
-
+*/
         // ===== Product API Methods =====
 
         private async Task FetchProductData(VerifyPayload payload)
