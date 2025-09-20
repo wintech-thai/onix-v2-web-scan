@@ -1,27 +1,28 @@
-using System.Net;
-using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using OnixWebScan.Models;
 using OnixWebScan.Utils;
+using StackExchange.Redis;
 
 namespace OnixWebScan.Controllers
 {
     public class VerifyController : Controller
     {
-        private void SetCustomStatus(string status)
-        {
-            Response.Headers.Append("CUST_STATUS", status);
-            return;
-        }
-
         private readonly HttpClient _httpClient;
-        private readonly IWebHostEnvironment _env;
+        private readonly RedisHelper? _redis;
 
-        public VerifyController(HttpClient httpClient, IWebHostEnvironment env)
+        public VerifyController(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _env = env;
+
+            var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST");
+            var redisPort = Environment.GetEnvironmentVariable("REDIS_PORT");
+            if (redisHost != null)
+            {
+                //บน server จริง ๆ จะมี REDIS_HOST มาให้
+                var connection = ConnectionMultiplexer.Connect($"{redisHost}:{redisPort}");
+                _redis = new RedisHelper(connection);
+            }
         }
 
         private string GetViewPath(string viewName)
@@ -45,6 +46,43 @@ namespace OnixWebScan.Controllers
             var viewPath = $"Theme/{theme}/{viewName}";
 
             return viewPath;
+        }
+
+        private void SetCustomStatus(string status)
+        {
+            Response.Headers.Append("CUST_STATUS", status);
+            return;
+        }
+
+        public EncryptionConfig GetEncryptionConfig(string org)
+        {
+            if (_redis == null)
+            {
+                //This is for local development
+                var e = new EncryptionConfig()
+                {
+                    Encryption_Key = Environment.GetEnvironmentVariable("ENCRYPTION_KEY"),
+                    Encryption_Iv = Environment.GetEnvironmentVariable("ENCRYPTION_IV"),
+                };
+
+                return e;
+            }
+
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var cacheKey = $"CacheLoader:{env}:ScanItemActions:{org}";
+            //Console.WriteLine($"===[{cacheKey}]===");
+            var t = _redis.GetObjectAsync<EncryptionConfig>(cacheKey).Result;
+            if (t == null)
+            {
+                t = new EncryptionConfig()
+                {
+                    //This is fake
+                    Encryption_Key = "99999999999999",
+                    Encryption_Iv = "AAAAAAAAAAAAAAAA",
+                };
+            }
+
+            return t;
         }
 
         [Route("verify")]
@@ -134,8 +172,9 @@ namespace OnixWebScan.Controllers
                 return View(GetViewPath("Verify"), vmMissingeOrg);
             }
 
-            var key = Environment.GetEnvironmentVariable("ENCRYPTION_KEY");
-            var iv  = Environment.GetEnvironmentVariable("ENCRYPTION_IV");
+            var ec = GetEncryptionConfig(org);
+            var key = ec.Encryption_Key;
+            var iv  = ec.Encryption_Iv;
             if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(iv))
             {
                 var vmConfig = new VerifyViewModel

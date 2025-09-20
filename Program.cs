@@ -1,6 +1,8 @@
 using Serilog;
 using Microsoft.Extensions.FileProviders;
 using OnixWebScan.AuditLogs;
+using StackExchange.Redis;
+using OnixWebScan.Utils;
 
 var log = new LoggerConfiguration()
     .WriteTo.Console()
@@ -8,6 +10,15 @@ var log = new LoggerConfiguration()
 Log.Logger = log;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//Redis
+var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST");
+var redisPort = Environment.GetEnvironmentVariable("REDIS_PORT");
+var redisHostStr = $"{redisHost}:{redisPort}";
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+sp => ConnectionMultiplexer.Connect(redisHostStr));
+builder.Services.AddScoped<RedisHelper>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
