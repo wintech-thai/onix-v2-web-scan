@@ -16,13 +16,38 @@ namespace OnixWebScan.Controllers
         }
 
         private readonly HttpClient _httpClient;
+        private readonly IWebHostEnvironment _env;
 
-        public VerifyController(HttpClient httpClient)
+        public VerifyController(HttpClient httpClient, IWebHostEnvironment env)
         {
             _httpClient = httpClient;
+            _env = env;
         }
+
+        private string GetViewPath(string viewName)
+        {
+            string[] whiteListedThemes = { "default" };
+
+            var queryParams = HttpContext.Request.Query;
+            var theme = queryParams["theme"].ToString();
+
+            if (string.IsNullOrEmpty(theme))
+            {
+                theme = "default";
+            }
+
+            if (!whiteListedThemes.Contains(theme))
+            {
+                Console.WriteLine($"===== THEME NOT FOUND [{theme}] ==> use [default] instead =======");
+                theme = "default";
+            }
+
+            var viewPath = $"Theme/{theme}/{viewName}";
+
+            return viewPath;
+        }
+
         [Route("verify")]
-        [Route("verify-dev")]
         public async Task<IActionResult> Index()
         {
             var queryParams = HttpContext.Request.Query;
@@ -40,7 +65,7 @@ namespace OnixWebScan.Controllers
                 };
 
                 SetCustomStatus("ERR_PARAMETER_MISSING");
-                return View("Verify", vm1);
+                return View(GetViewPath("Verify"), vm1);
             }
 
             // Case 2: มี query parameter แต่ไม่ใช่ "data"
@@ -56,7 +81,7 @@ namespace OnixWebScan.Controllers
                 };
 
                 SetCustomStatus("ERR_DATA_MISSING");
-                return View("Verify", vm2);
+                return View(GetViewPath("Verify"), vm2);
             }
 
             var data = queryParams["data"].ToString();
@@ -74,7 +99,39 @@ namespace OnixWebScan.Controllers
                 };
 
                 SetCustomStatus("ERR_DATA_EMPTY");
-                return View("Verify", vm3);
+                return View(GetViewPath("Verify"), vm3);
+            }
+
+            var theme = queryParams["theme"].ToString();
+            if (string.IsNullOrEmpty(theme) || theme.Trim() == "")
+            {
+                var vmMissingeTheme = new VerifyViewModel
+                {
+                    RawJson = "",
+                    Payload = new VerifyPayload { Status = "MISSING_THEME" },
+                    StatusCss = "vx-badge err",
+                    StatusText = "MISSING_THEME",
+                    TtlDisplay = "-"
+                };
+
+                SetCustomStatus("ERR_MISSINGE_THEME");
+                return View(GetViewPath("Verify"), vmMissingeTheme);
+            }
+
+            var org = queryParams["org"].ToString();
+            if (string.IsNullOrEmpty(org) || org.Trim() == "")
+            {
+                var vmMissingeOrg = new VerifyViewModel
+                {
+                    RawJson = "",
+                    Payload = new VerifyPayload { Status = "MISSING_ORG" },
+                    StatusCss = "vx-badge err",
+                    StatusText = "MISSING_ORG",
+                    TtlDisplay = "-"
+                };
+
+                SetCustomStatus("ERR_MISSINGE_ORG");
+                return View(GetViewPath("Verify"), vmMissingeOrg);
             }
 
             var key = Environment.GetEnvironmentVariable("ENCRYPTION_KEY");
@@ -91,7 +148,7 @@ namespace OnixWebScan.Controllers
                 };
 
                 SetCustomStatus("ERR_MISSING_DECRYPT_KEY");
-                return View("Verify", vmConfig);
+                return View(GetViewPath("Verify"), vmConfig);
             }
 
             // Case 4: มี data แต่ decrypt ไม่ผ่าน
@@ -113,7 +170,7 @@ namespace OnixWebScan.Controllers
                 };
 
                 SetCustomStatus("ERR_UANBLE_TO_DECRYPT");
-                return View("Verify", vm4);
+                return View(GetViewPath("Verify"), vm4);
             }
 
             VerifyPayload? payload = null;
@@ -136,7 +193,7 @@ namespace OnixWebScan.Controllers
                 };
 
                 SetCustomStatus("ERR_INVALID_JSON");
-                return View("Verify", vm4);
+                return View(GetViewPath("Verify"), vm4);
             }
 
             var (cls, text) = MapStatus(payload?.Status);
@@ -172,69 +229,8 @@ namespace OnixWebScan.Controllers
             // }
 
             SetCustomStatus("SUCCESS");
-            return View("Verify", vm);
+            return View(GetViewPath("Verify"), vm);
         }
-
-
-        /// <summary>
-        /// เปิดลิงก์ภายนอกโดยให้หลังบ้าน redirect (ไม่ให้หน้า View ยิงตรง)
-        /// พารามิเตอร์ u = Base64(UTF8(url)) แล้ว URL-encode อีกชั้น
-        /// </summary>
-        [HttpGet("verify/open")]
-        public IActionResult OpenExternal(string? u)
-        {
-            if (string.IsNullOrWhiteSpace(u)) return NotFound();
-
-            string url;
-            try
-            {
-                var raw = WebUtility.UrlDecode(u);
-                url = Encoding.UTF8.GetString(Convert.FromBase64String(raw!));
-            }
-            catch
-            {
-                return BadRequest("Invalid parameter.");
-            }
-
-            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-                return BadRequest("Invalid url.");
-
-            var scheme = uri.Scheme.ToLowerInvariant();
-            if (scheme != "http" && scheme != "https" && scheme != "mailto")
-                return BadRequest("Unsupported scheme.");
-
-            return Redirect(url);
-        }
-
-        /// <summary>
-        /// เปิดเมลถึงทีมซัพพอร์ต พร้อม subject/body ใส่ข้อมูลช่วยตรวจสอบ
-        /// </summary>
-        [HttpGet("verify/support")]
-        public IActionResult ContactSupport(string? serial, string? pin, string? brand)
-        {
-            var to = "support@example.com";
-            var subject = Uri.EscapeDataString($"ช่วยตรวจความแท้ - Serial {serial ?? "-"}");
-            var body = Uri.EscapeDataString(
-                $"รบกวนช่วยตรวจสินค้าให้หน่อยครับ/ค่ะ\n\n" +
-                $"แบรนด์: {brand ?? "-"}\n" +
-                $"Serial: {serial ?? "-"}\n" +
-                $"PIN: {pin ?? "-"}\n" +
-                $"\nขอบคุณครับ/ค่ะ");
-
-            var mailto = $"mailto:{to}?subject={subject}&body={body}";
-            return Redirect(mailto);
-        }
-
-        /// <summary>
-        /// กรณีมี RedirectUrl ใน payload ให้เรียกผ่านหลังบ้าน
-        /// </summary>
-        [HttpGet("verify/redirect")]
-        public IActionResult OpenRedirect(string? u)
-        {
-            // ใช้พารามิเตอร์แบบเดียวกับ OpenExternal
-            return OpenExternal(u);
-        }
-
         // ===== Product API Methods =====
 
         private async Task FetchProductData(VerifyPayload payload)

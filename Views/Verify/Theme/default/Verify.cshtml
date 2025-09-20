@@ -25,6 +25,8 @@
     or "PARAM_MISSING"
     or "PARAMETER_MISSING"
     or "NO_DATA"
+    or "MISSING_THEME"
+    or "MISSING_ORG"
     or "DECRYPT_FAIL"
     or "DECRYPT_ERROR"
     or "INVALID"
@@ -42,6 +44,8 @@
     "PARAM_MISSING" => "ข้อมูลที่ส่งมาไม่ครบ",
     "PARAMETER_MISSING" => "พารามิเตอร์หายไป",
     "NO_DATA" => "ไม่มีข้อมูล",
+    "MISSING_THEME" => "ไม่มีข้อมูล theme ในลิงค์",
+    "MISSING_ORG" => "ไม่มีข้อมูล org ในลิงค์",
     "DECRYPT_FAIL" or "DECRYPT_ERROR" => "ไม่สามารถถอดรหัสข้อมูลได้",
     "INVALID" => "โค้ดไม่ถูกต้อง",
     "FAILED" => "การตรวจสอบล้มเหลว",
@@ -76,6 +80,14 @@
       case "NO_DATA":
         messages.Add("ไม่มีข้อมูลสำหรับการตรวจสอบ ลิงก์หรือ QR Code อาจไม่ถูกต้อง หรือข้อมูลเสียหาย");
         @* messages.Add("ลิงก์หรือ QR Code อาจไม่ถูกต้อง หรือข้อมูลเสียหาย"); *@
+        break;
+      case "MISSING_THEME":
+        messages.Add("ไม่มีข้อมูล theme ในลิงก์");
+        @* messages.Add("ไม่มีข้อมูล theme ในลิงก์"); *@
+        break;
+      case "MISSING_ORG":
+        messages.Add("ไม่มีข้อมูล org ในลิงก์");
+        @* messages.Add("ไม่มีข้อมูล org ในลิงก์"); *@
         break;
       case "DECRYPT_FAIL":
         messages.Add("ไม่สามารถอ่านข้อมูลสินค้าได้ ข้อมูลอาจเสียหายหรือไม่ถูกต้อง");
