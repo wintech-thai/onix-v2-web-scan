@@ -26,6 +26,8 @@ namespace OnixWebScan.Controllers
 
         private string GetViewPath(string viewName)
         {
+            string[] whiteListedThemes = { "default" };
+
             var queryParams = HttpContext.Request.Query;
             var theme = queryParams["theme"].ToString();
 
@@ -34,10 +36,9 @@ namespace OnixWebScan.Controllers
                 theme = "default";
             }
 
-            var absolutePath = Path.Combine(_env.ContentRootPath, "Views", "Verify", "Theme", theme, $"{viewName}.cshtml");
-            if (!System.IO.File.Exists(absolutePath))
+            if (!whiteListedThemes.Contains(theme))
             {
-                Console.WriteLine($"===== THEME NOT FOUND [{absolutePath}] =======");
+                Console.WriteLine($"===== THEME NOT FOUND [{theme}] ==> use [default] instead =======");
                 theme = "default";
             }
 
@@ -45,7 +46,6 @@ namespace OnixWebScan.Controllers
 
             return viewPath;
         }
-
 
         [Route("verify")]
         public async Task<IActionResult> Index()
