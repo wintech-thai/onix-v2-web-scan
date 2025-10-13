@@ -50,6 +50,7 @@ docs/
 
 # Keep specific instruction files
 !.github/instructions/
+
 # Ignore old copilot instruction files
 .github/copilot-instructions-old.md
 .github/copilot-instructions.md

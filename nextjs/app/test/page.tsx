@@ -47,6 +47,7 @@ const mockScenarios: Record<string, Omit<VerifyViewModel, 'language'>> = {
       productId: 'PROD-001',
       batchNumber: 'BATCH-2024-001',
       serialNumber: 'SN-123456789',
+      pin: 'PIN-9876',
       location: 'Warehouse A - Section 12',
       timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
       metadata: {
@@ -70,6 +71,7 @@ const mockScenarios: Record<string, Omit<VerifyViewModel, 'language'>> = {
       productId: 'PROD-002',
       batchNumber: 'BATCH-2024-002',
       serialNumber: 'SN-987654321',
+      pin: 'PIN-1234',
       location: 'Warehouse B - Section 5',
       timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
     },
@@ -97,6 +99,7 @@ const mockScenarios: Record<string, Omit<VerifyViewModel, 'language'>> = {
       productId: 'PROD-PREMIUM-100',
       batchNumber: 'BATCH-PREMIUM-2024-Q4',
       serialNumber: 'SN-PREMIUM-1234567890',
+      pin: 'PIN-PREM-5678',
       location: 'Premium Storage Facility',
       timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
       metadata: {
@@ -159,6 +162,7 @@ const mockScenarios: Record<string, Omit<VerifyViewModel, 'language'>> = {
       productId: 'PROD-RETAIL-050',
       batchNumber: 'BATCH-2024-SEP',
       serialNumber: 'SN-RETAIL-REG-001',
+      pin: 'PIN-REG-4321',
       location: 'Retail Store - Downtown',
       timestamp: new Date('2024-09-15T10:30:00Z').toISOString(),
       metadata: {

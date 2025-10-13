@@ -40,6 +40,7 @@ export interface ScanItem {
   productId?: string;
   batchNumber?: string;
   serialNumber?: string;
+  pin?: string; // PIN code for verification
   location?: string;
   timestamp?: string; // ISO date string
   metadata?: Record<string, any>;

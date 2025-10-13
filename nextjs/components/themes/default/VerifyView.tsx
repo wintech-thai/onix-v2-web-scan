@@ -2,9 +2,9 @@
 
 import { VerifyViewModel } from '@/lib/types';
 import { translations, getStatusTitle, getStatusMessages } from '@/lib/translations';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, Copy, Check } from 'lucide-react';
 
 interface VerifyViewProps {
   verifyData: VerifyViewModel;
@@ -47,6 +47,20 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
   };
 
   const statusIcon = getStatusIcon();
+
+  // Copy button state
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  // Copy to clipboard function
+  const copyToClipboard = async (text: string, fieldName: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(fieldName);
+      setTimeout(() => setCopiedField(null), 2000); // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   // Confetti effect for success
   useEffect(() => {
@@ -158,6 +172,55 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
                 </p>
               ))}
             </div>
+
+            {/* Serial and Pin Section */}
+            {(verifyData.scanData?.serialNumber || verifyData.scanData?.pin) && (
+              <div className="mt-6 space-y-3">
+                {/* Serial */}
+                {verifyData.scanData.serialNumber && (
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-sm font-semibold text-gray-500">Serial :</span>
+                    <span className="text-sm font-bold text-gray-900 font-mono">
+                      {verifyData.scanData.serialNumber}
+                    </span>
+                    <button
+                      onClick={() => copyToClipboard(verifyData.scanData!.serialNumber!, 'serial')}
+                      className="inline-flex items-center justify-center p-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                      title="Copy Serial"
+                      aria-label="Copy Serial"
+                    >
+                      {copiedField === 'serial' ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-gray-600" />
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {/* Pin */}
+                {verifyData.scanData.pin && (
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-sm font-semibold text-gray-500">Pin :</span>
+                    <span className="text-sm font-bold text-gray-900 font-mono">
+                      {verifyData.scanData.pin}
+                    </span>
+                    <button
+                      onClick={() => copyToClipboard(verifyData.scanData!.pin!, 'pin')}
+                      className="inline-flex items-center justify-center p-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                      title="Copy Pin"
+                      aria-label="Copy Pin"
+                    >
+                      {copiedField === 'pin' ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-gray-600" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Divider */}
