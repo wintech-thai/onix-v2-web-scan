@@ -47,32 +47,41 @@ export interface ScanItem {
 }
 
 // ============================================================================
-// Product API Models
+// Product API Models (Matching C# ProductData structure)
 // ============================================================================
 
 export interface ProductApiResponse {
   status?: string;
   description?: string;
-  items?: ProductItem[];
+  item?: ProductItem;
+  images?: ProductImage[];
 }
 
 export interface ProductItem {
   id?: string;
-  name?: string;
   code?: string;
-  properties?: ProductProperties;
-  images?: ProductImage[];
+  name?: string;
+  description?: string;
+  narrative?: string; // Pipe-separated features
+  orgId?: string;
+  updatedDate?: string; // ISO date string
+  propertiesObj?: ProductPropertiesObj;
 }
 
-export interface ProductProperties {
-  description?: string;
+export interface ProductPropertiesObj {
   category?: string;
-  manufacturer?: string;
-  metadata?: Record<string, any>;
+  height?: number;
+  width?: number;
+  weight?: number;
+  dimentionUnit?: string; // cm, m, etc.
+  weightUnit?: string; // g, kg, etc.
+  productUrl?: string; // More details link
+  supplierUrl?: string; // Supplier website
 }
 
 export interface ProductImage {
-  url: string;
+  imageUrl: string;
+  narative?: string; // Caption for carousel
   altText?: string;
 }
 

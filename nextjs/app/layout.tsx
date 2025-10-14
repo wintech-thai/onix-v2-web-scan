@@ -6,10 +6,21 @@
  */
 
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Noto_Sans_Thai } from 'next/font/google';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const notoSansThai = Noto_Sans_Thai({ 
+  subsets: ['thai', 'latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-noto-sans-thai',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Onix v2 Web Scan - Verification System',
@@ -25,11 +36,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="th">
       <head>
         <link rel="icon" href="/scan-static/favicon.ico" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.variable} ${notoSansThai.variable}`} style={{ fontFamily: '"Inter", "Noto Sans Thai", system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif' }}>
         {children}
       </body>
     </html>

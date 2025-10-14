@@ -149,9 +149,9 @@ export const translations: Record<Language, Translations> = {
     theme: 'ธีม',
     
     statusBadge: {
-      success: '✓ ตรวจสอบสำเร็จ',
-      warning: '⚠️ ระวัง',
-      error: '⚠️ พบปัญหา',
+      success: 'ตรวจสอบสำเร็จ',
+      warning: 'ระวัง',
+      error: 'พบปัญหา',
     },
     
     titles: {

@@ -101,45 +101,39 @@ const mockScenarios: Record<string, Omit<VerifyViewModel, 'language'>> = {
     productData: {
       status: 'active',
       description: 'Premium Product Information Retrieved',
-      item: {
-        id: 'ITEM-001',
-        code: 'WH-PRO-2024',
-        name: 'Premium Wireless Headphones',
-        description: 'High-fidelity wireless headphones with active noise cancellation',
-        narrative: 'Active Noise Cancellation (ANC) technology | 30-hour battery life on single charge | Premium leather ear cushions for maximum comfort | Bluetooth 5.2 with aptX HD support | Foldable design with carrying case | Multi-device connectivity',
-        orgId: 'napbiotec',
-        updatedDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString(),
-        propertiesObj: {
-          category: 'Electronics - Audio',
-          height: 20,
-          width: 18,
-          weight: 250,
-          dimentionUnit: 'cm',
-          weightUnit: 'g',
-          productUrl: 'https://please-scan.com/products/wh-pro-2024',
-          supplierUrl: 'https://please-scan.com/suppliers/techaudio',
-        },
-      },
-      images: [
+      items: [
         {
-          imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800',
-          narative: 'Premium Wireless Headphones - Front View',
-          altText: 'Wireless Headphones Front',
-        },
-        {
-          imageUrl: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800',
-          narative: 'Side view showing controls and cushioning',
-          altText: 'Wireless Headphones Side',
-        },
-        {
-          imageUrl: 'https://images.unsplash.com/photo-1545127398-14699f92334b?w=800',
-          narative: 'Folded for easy portability',
-          altText: 'Wireless Headphones Folded',
-        },
-        {
-          imageUrl: 'https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=800',
-          narative: 'Premium carrying case included',
-          altText: 'Headphones with Case',
+          id: 'ITEM-001',
+          name: 'Premium Wireless Headphones',
+          code: 'WH-PRO-2024',
+          properties: {
+            description: 'High-fidelity wireless headphones with active noise cancellation, 30-hour battery life, and premium build quality.',
+            category: 'Electronics - Audio',
+            manufacturer: 'TechAudio Corp',
+            metadata: {
+              color: 'Midnight Black',
+              weight: '250g',
+              warranty: '2 years',
+            },
+          },
+          images: [
+            {
+              url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400',
+              altText: 'Wireless Headphones - Front View',
+            },
+            {
+              url: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400',
+              altText: 'Wireless Headphones - Side View',
+            },
+            {
+              url: 'https://images.unsplash.com/photo-1545127398-14699f92334b?w=400',
+              altText: 'Wireless Headphones - Folded',
+            },
+            {
+              url: 'https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=400',
+              altText: 'Wireless Headphones - Charging Case',
+            },
+          ],
         },
       ],
     },
