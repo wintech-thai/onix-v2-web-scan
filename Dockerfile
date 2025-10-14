@@ -1,33 +1,60 @@
 # -------------------------------
-# Stage 1: Build
+# Stage 1: Dependencies
 # -------------------------------
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM node:22.17.1-alpine3.22 AS deps
 WORKDIR /app
 
-# copy csproj & restore dependencies
-COPY *.csproj ./
-RUN dotnet restore
-
-# copy rest of the app
-COPY . ./
-
-# build the app
-RUN dotnet publish -c Release -o out
+# Install dependencies only when needed
+# Copy package files
+COPY nextjs/package.json nextjs/package-lock.json* ./
+RUN npm ci
 
 # -------------------------------
-# Stage 2: Runtime
+# Stage 2: Builder
 # -------------------------------
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM node:22.17.1-alpine3.22 AS builder
 WORKDIR /app
 
-# copy published files from build stage
-COPY --from=build /app/out ./
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
 
-# expose port
+# Copy application code
+COPY nextjs/ ./
+
+# Build Next.js application
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+RUN npm run build
+
+# -------------------------------
+# Stage 3: Runner
+# -------------------------------
+FROM node:22.17.1-alpine3.22 AS runner
+WORKDIR /app
+
+# Set production environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=5000
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy standalone build
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
 EXPOSE 5000
 
-# set environment variable to listen on 0.0.0.0
-ENV DOTNET_URLS=http://0.0.0.0:5000
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:5000/test', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# start the app
-ENTRYPOINT ["dotnet", "onix-v2-web-scan.dll"]
+# Start the application
+CMD ["node", "server.js"]
