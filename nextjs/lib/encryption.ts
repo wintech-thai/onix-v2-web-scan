@@ -8,25 +8,30 @@ import crypto from 'crypto';
 import { DecryptionError } from './types';
 
 /**
- * Encrypts plaintext using AES-256-CBC
+ * Encrypts plaintext using AES-CBC (automatically selects key size based on key length)
  * @param plainText - The text to encrypt
- * @param key - 32-character encryption key
+ * @param key - Encryption key (16/24/32 characters for AES-128/192/256)
  * @param iv - 16-character initialization vector
  * @returns Base64-encoded encrypted string
  */
 export function encrypt(plainText: string, key: string, iv: string): string {
   try {
-    // Validate key and IV lengths
-    if (key.length !== 32) {
-      throw new Error('Encryption key must be 32 characters for AES-256');
+    // Validate key length (must be 16, 24, or 32 bytes for AES)
+    if (![16, 24, 32].includes(key.length)) {
+      throw new Error('Encryption key must be 16, 24, or 32 characters (AES-128/192/256)');
     }
     if (iv.length !== 16) {
       throw new Error('Initialization vector must be 16 characters');
     }
 
-    // Create cipher with AES-256-CBC
+    // Determine algorithm based on key length (matching C# Aes.Create() behavior)
+    const algorithm = key.length === 16 ? 'aes-128-cbc' : 
+                     key.length === 24 ? 'aes-192-cbc' : 
+                     'aes-256-cbc';
+
+    // Create cipher with appropriate AES variant
     const cipher = crypto.createCipheriv(
-      'aes-256-cbc',
+      algorithm,
       Buffer.from(key, 'utf8'),
       Buffer.from(iv, 'utf8')
     );
@@ -44,9 +49,9 @@ export function encrypt(plainText: string, key: string, iv: string): string {
 }
 
 /**
- * Decrypts base64-encoded ciphertext using AES-256-CBC
+ * Decrypts base64-encoded ciphertext using AES-CBC (automatically selects key size based on key length)
  * @param cipherTextBase64 - Base64-encoded encrypted string
- * @param key - 32-character encryption key
+ * @param key - Encryption key (16/24/32 characters for AES-128/192/256)
  * @param iv - 16-character initialization vector
  * @returns Decrypted plaintext string
  * @throws DecryptionError if decryption fails
@@ -62,17 +67,25 @@ export function decrypt(
       throw new Error('Cipher text cannot be empty');
     }
 
-    if (key.length !== 32) {
-      throw new Error('Encryption key must be 32 characters for AES-256');
+    // Validate key length (must be 16, 24, or 32 bytes for AES)
+    if (![16, 24, 32].includes(key.length)) {
+      throw new Error('Encryption key must be 16, 24, or 32 characters (AES-128/192/256)');
     }
 
     if (iv.length !== 16) {
       throw new Error('Initialization vector must be 16 characters');
     }
 
-    // Create decipher with AES-256-CBC
+    // Determine algorithm based on key length (matching C# Aes.Create() behavior)
+    const algorithm = key.length === 16 ? 'aes-128-cbc' : 
+                     key.length === 24 ? 'aes-192-cbc' : 
+                     'aes-256-cbc';
+
+    console.log(`Using ${algorithm} for decryption (key length: ${key.length} bytes)`);
+
+    // Create decipher with appropriate AES variant
     const decipher = crypto.createDecipheriv(
-      'aes-256-cbc',
+      algorithm,
       Buffer.from(key, 'utf8'),
       Buffer.from(iv, 'utf8')
     );

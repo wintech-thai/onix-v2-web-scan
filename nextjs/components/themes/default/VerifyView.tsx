@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import type { VerifyViewModel } from '@/lib/types';
+import type { VerifyViewModel, ProductApiResponse } from '@/lib/types';
 import { translations, type Language } from '@/lib/translations';
 
 interface VerifyViewProps {
@@ -13,6 +13,47 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [productData, setProductData] = useState<ProductApiResponse | null>(verifyData.productData);
+  const [isLoadingProduct, setIsLoadingProduct] = useState(false);
+  const [productError, setProductError] = useState<string | null>(null);
+
+  // Lazy load product data when modal opens
+  const handleViewProduct = async () => {
+    // If product data already loaded, just open modal
+    if (productData) {
+      setIsModalOpen(true);
+      return;
+    }
+
+    // If no product URL, open modal anyway (will show "no data" message)
+    if (!verifyData.productUrl) {
+      setIsModalOpen(true);
+      return;
+    }
+
+    // Fetch product data from API route
+    setIsLoadingProduct(true);
+    setProductError(null);
+
+    try {
+      const response = await fetch(`/api/product?url=${encodeURIComponent(verifyData.productUrl)}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch product data: ${response.status}`);
+      }
+
+      const data: ProductApiResponse = await response.json();
+      setProductData(data);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching product data:', error);
+      setProductError(error instanceof Error ? error.message : 'Failed to load product data');
+      // Still open modal to show error
+      setIsModalOpen(true);
+    } finally {
+      setIsLoadingProduct(false);
+    }
+  };
 
   // Determine status type
   const status = verifyData.status?.toUpperCase() || 'UNKNOWN';
@@ -70,8 +111,8 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
     }
   };
 
-  // Carousel navigation functions
-  const images = verifyData.productData?.images || [];
+  // Carousel navigation functions (use state productData)
+  const images = productData?.images || [];
   const totalSlides = images.length;
 
   const nextSlide = () => {
@@ -122,8 +163,7 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
       <div 
         className="mx-auto p-6"
         style={{ 
-          maxWidth: '768px',
-          background: '#f7f8fb',
+          maxWidth: '400px',
           opacity: 0, 
           transform: 'translateY(20px)',
           animation: 'fadeIn 1s ease-out forwards'
@@ -203,17 +243,17 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
       <hr className="my-6 border-gray-200" />
 
       {/* Serial and Pin Section */}
-      {(verifyData.scanData?.serialNumber || verifyData.scanData?.pin) && (
+      {(verifyData.scanData?.serial || verifyData.scanData?.pin) && (
         <div className="mb-6 space-y-3">
           {/* Serial */}
-          {verifyData.scanData.serialNumber && (
+          {verifyData.scanData.serial && (
             <div className="flex items-center justify-center gap-2">
               <span className="text-sm font-semibold text-gray-500">Serial :</span>
               <span className="text-sm font-bold text-gray-900 font-mono">
-                {verifyData.scanData.serialNumber}
+                {verifyData.scanData.serial}
               </span>
               <button
-                onClick={() => copyToClipboard(verifyData.scanData!.serialNumber!, 'serial')}
+                onClick={() => copyToClipboard(verifyData.scanData!.serial!, 'serial')}
                 className="p-1 hover:bg-gray-100 rounded transition-colors border border-gray-300"
                 title={copiedField === 'serial' ? 'Copied!' : 'Copy Serial'}
                 aria-label="Copy Serial"
@@ -256,11 +296,11 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
           )}
 
           {/* Registered At (for warning status only) */}
-          {isWarning && verifyData.scanData.timestamp && (
+          {isWarning && verifyData.scanData.registeredDate && (
             <div className="flex items-center justify-center gap-2">
               <span className="text-sm font-semibold text-gray-500">{t.labels.registeredAt} :</span>
               <span className="text-sm font-bold text-gray-900">
-                {new Date(verifyData.scanData.timestamp).toLocaleString(lang === 'th' ? 'th-TH' : 'en-US', {
+                {new Date(verifyData.scanData.registeredDate).toLocaleString(lang === 'th' ? 'th-TH' : 'en-US', {
                   year: 'numeric',
                   month: 'short',
                   day: '2-digit',
@@ -278,26 +318,41 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
       {isSuccess || isWarning ? (
         <button
           type="button"
-          onClick={() => setIsModalOpen(true)}
-          className="w-full py-3 px-4 text-white font-semibold rounded-lg transition-colors mb-4 border-0"
+          onClick={handleViewProduct}
+          disabled={isLoadingProduct}
+          className="w-full py-3 px-4 text-white font-semibold rounded-lg transition-colors mb-4 border-0 disabled:opacity-70 disabled:cursor-not-allowed"
           style={{
             background: gradientBg,
             boxShadow: `0 2px 8px ${shadowColor}`
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = isSuccess
-              ? 'linear-gradient(135deg, #58CD04 0%, #4BB803 100%)'
-              : 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)';
+            if (!isLoadingProduct) {
+              e.currentTarget.style.background = isSuccess
+                ? 'linear-gradient(135deg, #58CD04 0%, #4BB803 100%)'
+                : 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)';
+            }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = gradientBg;
           }}
         >
           <span className="inline-flex items-center justify-center gap-2">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M3,3H21V21H3V3M5,5V19H19V5H5M7.5,11H9.5V13H7.5V11M10.5,11H12.5V13H10.5V11M13.5,11H15.5V13H13.5V11M7.5,7H9.5V9H7.5V7M10.5,7H12.5V9H10.5V7M13.5,7H15.5V9H13.5V7M7.5,15H9.5V17H7.5V15M10.5,15H12.5V17H10.5V15M13.5,15H15.5V17H13.5V15Z" />
-            </svg>
-            {t.labels.viewProduct}
+            {isLoadingProduct ? (
+              <>
+                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {lang === 'th' ? 'กำลังโหลด...' : 'Loading...'}
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M3,3H21V21H3V3M5,5V19H19V5H5M7.5,11H9.5V13H7.5V11M10.5,11H12.5V13H10.5V11M13.5,11H15.5V13H13.5V11M7.5,7H9.5V9H7.5V7M10.5,7H12.5V9H10.5V7M13.5,7H15.5V9H13.5V7M7.5,15H9.5V17H7.5V15M10.5,15H12.5V17H10.5V15M13.5,15H15.5V17H13.5V15Z" />
+                </svg>
+                {t.labels.viewProduct}
+              </>
+            )}
           </span>
         </button>
       ) : (
@@ -421,16 +476,44 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
 
             {/* Modal Body */}
             <div className="p-6" style={{ background: '#f7f8fb' }}>
-              {verifyData.productData?.item ? (
+              {/* Show loading state */}
+              {isLoadingProduct ? (
+                <div className="text-center py-12">
+                  <svg className="w-12 h-12 mx-auto mb-4 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <p className="text-gray-600 font-semibold">
+                    {lang === 'th' ? 'กำลังโหลดข้อมูลผลิตภัณฑ์...' : 'Loading product data...'}
+                  </p>
+                </div>
+              ) : productError ? (
+                /* Show error state */
+                <div className="text-center py-12">
+                  <svg className="w-12 h-12 mx-auto mb-4 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                  </svg>
+                  <p className="text-red-600 font-semibold mb-2">
+                    {lang === 'th' ? 'ไม่สามารถโหลดข้อมูลผลิตภัณฑ์' : 'Failed to load product data'}
+                  </p>
+                  <p className="text-gray-600 text-sm">{productError}</p>
+                  <button
+                    onClick={handleViewProduct}
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    {lang === 'th' ? 'ลองอีกครั้ง' : 'Try Again'}
+                  </button>
+                </div>
+              ) : productData?.item ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* LEFT COLUMN - Images & Meta */}
                   <div className="text-center">
                     {/* Image Carousel */}
-                    {verifyData.productData.images && verifyData.productData.images.length > 0 && (
+                    {productData.images && productData.images.length > 0 && (
                       <div className="relative bg-white rounded-lg shadow-sm overflow-hidden mb-4">
                         {/* Carousel Images */}
                         <div className="carousel-container relative" style={{ height: '420px' }}>
-                          {verifyData.productData.images.map((img, index) => (
+                          {productData.images.map((img, index) => (
                             <div
                               key={index}
                               className="absolute inset-0 transition-opacity duration-500"
@@ -499,7 +582,7 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
                                 className="absolute bottom-14 left-0 right-0 flex justify-center gap-2"
                                 style={{ zIndex: 10 }}
                               >
-                                {verifyData.productData.images.map((_, index) => (
+                                {productData.images.map((_, index) => (
                                   <button
                                     key={index}
                                     onClick={() => goToSlide(index)}
@@ -527,14 +610,14 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
                       <div className="bg-white p-3 rounded-lg shadow-sm">
                         <div className="text-sm text-gray-500 mb-1">{t.labels.manufacturer}</div>
                         <div className="font-semibold text-gray-900">
-                          {verifyData.productData.item.orgId || '-'}
+                          {productData.item.orgId || '-'}
                         </div>
                       </div>
                       <div className="bg-white p-3 rounded-lg shadow-sm">
                         <div className="text-sm text-gray-500 mb-1">{t.labels.lastUpdate}</div>
                         <div className="font-semibold text-gray-900">
-                          {verifyData.productData.item.updatedDate
-                            ? new Date(verifyData.productData.item.updatedDate).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', {
+                          {productData.item.updatedDate
+                            ? new Date(productData.item.updatedDate).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', {
                                 year: 'numeric',
                                 month: 'short',
                                 day: 'numeric',
@@ -545,10 +628,10 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
                     </div>
 
                     {/* Product URL Link */}
-                    {verifyData.productData.item.propertiesObj?.productUrl && (
+                    {productData.item.propertiesObj?.productUrl && (
                       <div className="mt-3">
                         <a
-                          href={verifyData.productData.item.propertiesObj.productUrl}
+                          href={productData.item.propertiesObj.productUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
@@ -563,11 +646,11 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
                   <div>
                     {/* Product Title & Description */}
                     <h3 className="text-3xl font-bold text-gray-900 mb-3">
-                      {verifyData.productData.item.code || '-'}
+                      {productData.item.code || '-'}
                     </h3>
                     <p className="text-gray-600 text-lg mb-4">
-                      {verifyData.productData.item.description || 
-                       verifyData.productData.item.narrative || 
+                      {productData.item.description || 
+                       productData.item.narrative || 
                        t.labels.noProductData}
                     </p>
 
@@ -578,7 +661,7 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
                         <div className="text-2xl mb-1">🏷️</div>
                         <div className="font-semibold text-gray-900 text-sm">{t.labels.productType}</div>
                         <div className="text-gray-600 text-sm">
-                          {verifyData.productData.item.propertiesObj?.category || '-'}
+                          {productData.item.propertiesObj?.category || '-'}
                         </div>
                       </div>
 
@@ -587,8 +670,8 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
                         <div className="text-2xl mb-1">📏</div>
                         <div className="font-semibold text-gray-900 text-sm">{t.labels.height}</div>
                         <div className="text-gray-600 text-sm">
-                          {verifyData.productData.item.propertiesObj?.height 
-                            ? `${verifyData.productData.item.propertiesObj.height} ${verifyData.productData.item.propertiesObj.dimentionUnit || 'cm'}`
+                          {productData.item.propertiesObj?.height 
+                            ? `${productData.item.propertiesObj.height} ${productData.item.propertiesObj.dimentionUnit || 'cm'}`
                             : '-'}
                         </div>
                       </div>
@@ -598,8 +681,8 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
                         <div className="text-2xl mb-1">📐</div>
                         <div className="font-semibold text-gray-900 text-sm">{t.labels.width}</div>
                         <div className="text-gray-600 text-sm">
-                          {verifyData.productData.item.propertiesObj?.width 
-                            ? `${verifyData.productData.item.propertiesObj.width} ${verifyData.productData.item.propertiesObj.dimentionUnit || 'cm'}`
+                          {productData.item.propertiesObj?.width 
+                            ? `${productData.item.propertiesObj.width} ${productData.item.propertiesObj.dimentionUnit || 'cm'}`
                             : '-'}
                         </div>
                       </div>
@@ -609,19 +692,19 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
                         <div className="text-2xl mb-1">⚖️</div>
                         <div className="font-semibold text-gray-900 text-sm">{t.labels.weight}</div>
                         <div className="text-gray-600 text-sm">
-                          {verifyData.productData.item.propertiesObj?.weight 
-                            ? `${verifyData.productData.item.propertiesObj.weight} ${verifyData.productData.item.propertiesObj.weightUnit || 'g'}`
+                          {productData.item.propertiesObj?.weight 
+                            ? `${productData.item.propertiesObj.weight} ${productData.item.propertiesObj.weightUnit || 'g'}`
                             : '-'}
                         </div>
                       </div>
                     </div>
 
                     {/* Features List */}
-                    {verifyData.productData.item.narrative && (
+                    {productData.item.narrative && (
                       <div className="bg-white p-4 rounded-lg shadow-sm">
                         <h6 className="font-semibold text-gray-900 text-lg mb-3">{t.labels.features}</h6>
                         <div className="space-y-2">
-                          {verifyData.productData.item.narrative.split('|').map((feature, idx) => (
+                          {productData.item.narrative.split('|').map((feature, idx) => (
                             <div key={idx} className="flex items-start gap-2">
                               <div 
                                 className="rounded-full mt-1.5" 
@@ -659,9 +742,9 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
               >
                 {t.labels.close}
               </button>
-              {verifyData.productData?.item?.propertiesObj?.supplierUrl && (
+              {productData?.item?.propertiesObj?.supplierUrl && (
                 <a
-                  href={verifyData.productData.item.propertiesObj.supplierUrl}
+                  href={productData.item.propertiesObj.supplierUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2 text-white font-medium rounded-lg transition-colors"

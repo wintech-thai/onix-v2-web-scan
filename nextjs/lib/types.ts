@@ -21,6 +21,7 @@ export interface VerifyViewModel {
   message: string;
   scanData: ScanItem | null;
   productData: ProductApiResponse | null;
+  productUrl?: string; // URL for lazy loading product data on client-side
   theme: string;
   language?: 'th' | 'en'; // Language preference (default: th)
   ttl?: number;
@@ -29,21 +30,33 @@ export interface VerifyViewModel {
 }
 
 export interface VerifyPayload {
-  scanItem: ScanItem;
-  ttl: number; // seconds
-  createdDate: string; // ISO date string
+  status?: string;
+  descriptionThai?: string;
+  descriptionEng?: string;
+  scanItem?: ScanItem;
+  redirectUrl?: string;
+  getProductUrl?: string;
+  dataGeneratedDate?: string; // ISO date string
+  ttlMinute?: number; // Time to live in minutes
+  productData?: ProductApiResponse; // Fetched from Product API
 }
 
 export interface ScanItem {
   id?: string;
   orgId?: string;
-  productId?: string;
-  batchNumber?: string;
-  serialNumber?: string;
+  serial?: string; // Serial number
   pin?: string; // PIN code for verification
-  location?: string;
-  timestamp?: string; // ISO date string
-  metadata?: Record<string, any>;
+  tags?: string;
+  productCode?: string;
+  sequenceNo?: string;
+  url?: string;
+  runId?: string;
+  uploadedPath?: string;
+  itemGroup?: string;
+  registeredFlag?: string;
+  usedFlag?: string;
+  createdDate?: string; // ISO date string
+  registeredDate?: string; // ISO date string
 }
 
 // ============================================================================
