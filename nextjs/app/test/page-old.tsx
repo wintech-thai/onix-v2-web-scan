@@ -1,7 +1,10 @@
 /**
  * TEST PAGE - Development Only
  * 
- * This page displays the verification UI with mock data for testing purposes.
+ * This page displays the verification UI with mock         id: 'ITEM-001',
+        name: 'Premium Wireless Headphones',
+        code: 'WH-PRO-2024',
+        propertiesObj: { for testing purposes.
  * Access different scenarios via query parameter:
  * - /test?scenario=valid (default)
  * - /test?scenario=expired
@@ -34,16 +37,11 @@ const mockScenarios: Record<string, Omit<VerifyViewModel, 'language'>> = {
     scanData: {
       id: 'SCAN-12345',
       orgId: 'ORG-ACME',
-      productId: 'PROD-001',
-      batchNumber: 'BATCH-2024-001',
-      serialNumber: 'SN-123456789',
+      productCode: 'PROD-001',
+      serial: 'SN-123456789',
       pin: 'PIN-9876',
-      location: 'Warehouse A - Section 12',
-      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      metadata: {
-        inspector: 'John Doe',
-        station: 'QC-01',
-      },
+      tags: 'BATCH-2024-001',
+      createdDate: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
     },
     productData: null,
   },
@@ -58,12 +56,11 @@ const mockScenarios: Record<string, Omit<VerifyViewModel, 'language'>> = {
     scanData: {
       id: 'SCAN-67890',
       orgId: 'ORG-ACME',
-      productId: 'PROD-002',
-      batchNumber: 'BATCH-2024-002',
-      serialNumber: 'SN-987654321',
+      productCode: 'PROD-002',
+      serial: 'SN-987654321',
       pin: 'PIN-1234',
-      location: 'Warehouse B - Section 5',
-      timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+      tags: 'BATCH-2024-002',
+      createdDate: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
     },
     productData: null,
   },
@@ -86,54 +83,43 @@ const mockScenarios: Record<string, Omit<VerifyViewModel, 'language'>> = {
     scanData: {
       id: 'SCAN-PREMIUM-001',
       orgId: 'ORG-PREMIUM',
-      productId: 'PROD-PREMIUM-100',
-      batchNumber: 'BATCH-PREMIUM-2024-Q4',
-      serialNumber: 'SN-PREMIUM-1234567890',
+      productCode: 'PROD-PREMIUM-100',
+      serial: 'SN-PREMIUM-1234567890',
       pin: 'PIN-PREM-5678',
-      location: 'Premium Storage Facility',
-      timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-      metadata: {
-        inspector: 'Jane Smith',
-        quality_grade: 'A+',
-        certification: 'ISO-9001',
-      },
+      tags: 'BATCH-PREMIUM-2024-Q4',
+      createdDate: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
     },
     productData: {
       status: 'active',
       description: 'Premium Product Information Retrieved',
-      items: [
+      item: {
+        id: 'ITEM-001',
+        name: 'Premium Wireless Headphones',
+        code: 'WH-PRO-2024',
+        propertiesObj: {
+          category: 'Electronics - Audio',
+          weight: 250,
+          weightUnit: 'g',
+          productUrl: 'https://example.com/products/wh-pro-2024',
+          supplierUrl: 'https://example.com/supplier/techaudio',
+        },
+      },
+      images: [
         {
-          id: 'ITEM-001',
-          name: 'Premium Wireless Headphones',
-          code: 'WH-PRO-2024',
-          properties: {
-            description: 'High-fidelity wireless headphones with active noise cancellation, 30-hour battery life, and premium build quality.',
-            category: 'Electronics - Audio',
-            manufacturer: 'TechAudio Corp',
-            metadata: {
-              color: 'Midnight Black',
-              weight: '250g',
-              warranty: '2 years',
-            },
-          },
-          images: [
-            {
-              url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400',
-              altText: 'Wireless Headphones - Front View',
-            },
-            {
-              url: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400',
-              altText: 'Wireless Headphones - Side View',
-            },
-            {
-              url: 'https://images.unsplash.com/photo-1545127398-14699f92334b?w=400',
-              altText: 'Wireless Headphones - Folded',
-            },
-            {
-              url: 'https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=400',
-              altText: 'Wireless Headphones - Charging Case',
-            },
-          ],
+          imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400',
+          altText: 'Wireless Headphones - Front View',
+        },
+        {
+          imageUrl: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400',
+          altText: 'Wireless Headphones - Side View',
+        },
+        {
+          imageUrl: 'https://images.unsplash.com/photo-1545127398-14699f92334b?w=400',
+          altText: 'Wireless Headphones - Folded',
+        },
+        {
+          imageUrl: 'https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=400',
+          altText: 'Wireless Headphones - Charging Case',
         },
       ],
     },
@@ -149,16 +135,12 @@ const mockScenarios: Record<string, Omit<VerifyViewModel, 'language'>> = {
     scanData: {
       id: 'SCAN-REG-001',
       orgId: 'ORG-RETAIL',
-      productId: 'PROD-RETAIL-050',
-      batchNumber: 'BATCH-2024-SEP',
-      serialNumber: 'SN-RETAIL-REG-001',
+      productCode: 'PROD-RETAIL-050',
+      serial: 'SN-RETAIL-REG-001',
       pin: 'PIN-REG-4321',
-      location: 'Retail Store - Downtown',
-      timestamp: new Date('2024-09-15T10:30:00Z').toISOString(),
-      metadata: {
-        registered_by: 'customer@example.com',
-        registration_date: '2024-09-15',
-      },
+      tags: 'BATCH-2024-SEP',
+      createdDate: new Date('2024-09-15T10:30:00Z').toISOString(),
+      registeredDate: new Date('2024-09-15T10:30:00Z').toISOString(),
     },
     productData: null,
   },
