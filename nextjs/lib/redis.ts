@@ -275,12 +275,10 @@ export async function getEncryptionConfig(org: string): Promise<EncryptionConfig
     // Normalize environment name to match C# convention
     // C# uses: ASPNETCORE_ENVIRONMENT (Development, Production, Staging)
     // Next.js uses: NODE_ENV (development, production, test)
-    //const nodeEnv = process.env.NODE_ENV || 'development';
-    //const env = nodeEnv === 'production' ? 'Production' : 
-    //            nodeEnv === 'test' ? 'Test' : 
-    //            'Development';
-
-    const env = process.env.NODE_ENV
+    const nodeEnv = process.env.NODE_ENV || 'development';
+    const env = nodeEnv === 'production' ? 'Production' : 
+                nodeEnv === 'test' ? 'Test' : 
+                'Development';
 
     // Build cache key matching C# pattern: CacheLoader:{env}:ScanItemActions:{org}
     const cacheKey = `CacheLoader:${env}:ScanItemActions:${org}`;
