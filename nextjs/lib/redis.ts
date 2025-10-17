@@ -227,6 +227,110 @@ export function isRedisAvailable(): boolean {
   return redisClient !== null && redisClient.status === 'ready';
 }
 
+/**
+ * Interface matching C# EncryptionConfig model
+ * From obsoleted/Models/EncryptionConfig.cs
+ */
+export interface EncryptionConfig {
+  Encryption_Key: string;
+  Encryption_Iv: string;
+}
+
+/**
+ * Get encryption configuration for organization
+ * Matches C# GetEncryptionConfig method (VerifyController.cs lines 57-82)
+ * 
+ * Priority (same as C#):
+ * 1. Redis cache (production) - CacheLoader:{env}:ScanItemActions:{org}
+ * 2. Environment variables (development fallback)
+ * 3. Fake keys (testing only - not implemented in Next.js)
+ * 
+ * @param org - Organization identifier (e.g., 'napbiotec')
+ * @returns Encryption configuration or null if not found
+ */
+export async function getEncryptionConfig(org: string): Promise<EncryptionConfig | null> {
+  const redis = getRedisClient();
+
+  // Case 1: No Redis configured - use environment variable fallback (development)
+  // Matches C# VerifyController.cs lines 59-66: if (_redis == null)
+  if (redis === null) {
+    console.log('Redis not configured, using environment variable fallback');
+    const key = process.env.ENCRYPTION_KEY;
+    const iv = process.env.ENCRYPTION_IV;
+
+    if (!key || !iv) {
+      console.error('ENCRYPTION_KEY or ENCRYPTION_IV not set in environment');
+      return null;
+    }
+
+    return {
+      Encryption_Key: key,
+      Encryption_Iv: iv,
+    };
+  }
+
+  // Case 2: Redis configured - fetch from cache (production)
+  // Matches C# VerifyController.cs lines 68-80
+  try {
+    // Normalize environment name to match C# convention
+    // C# uses: ASPNETCORE_ENVIRONMENT (Development, Production, Staging)
+    // Next.js uses: NODE_ENV (development, production, test)
+    const nodeEnv = process.env.NODE_ENV || 'development';
+    const env = nodeEnv === 'production' ? 'Production' : 
+                nodeEnv === 'test' ? 'Test' : 
+                'Development';
+
+    // Build cache key matching C# pattern: CacheLoader:{env}:ScanItemActions:{org}
+    const cacheKey = `CacheLoader:${env}:ScanItemActions:${org}`;
+    console.log(`Fetching encryption config from Redis: ${cacheKey}`);
+
+    const configJson = await getAsync(cacheKey);
+
+    if (!configJson) {
+      console.warn(`Encryption config not found in Redis for key: ${cacheKey}`);
+      
+      // Fallback to environment variables if Redis key not found
+      const key = process.env.ENCRYPTION_KEY;
+      const iv = process.env.ENCRYPTION_IV;
+
+      if (!key || !iv) {
+        console.error('Fallback failed: ENCRYPTION_KEY or ENCRYPTION_IV not set');
+        return null;
+      }
+
+      console.log('Using environment variable fallback');
+      return {
+        Encryption_Key: key,
+        Encryption_Iv: iv,
+      };
+    }
+
+    // Parse Redis response
+    const config: EncryptionConfig = JSON.parse(configJson);
+    console.log('✓ Successfully fetched encryption config from Redis');
+    
+    return config;
+
+  } catch (error) {
+    console.error('Error fetching encryption config from Redis:', error);
+    
+    // Fallback to environment variables on error
+    console.log('Redis error, falling back to environment variables');
+    const key = process.env.ENCRYPTION_KEY;
+    const iv = process.env.ENCRYPTION_IV;
+
+    if (!key || !iv) {
+      console.error('Fallback failed: ENCRYPTION_KEY or ENCRYPTION_IV not set');
+      return null;
+    }
+
+    return {
+      Encryption_Key: key,
+      Encryption_Iv: iv,
+    };
+  }
+}
+
 // Default export for convenience
 export default {
   getRedisClient,
@@ -238,4 +342,5 @@ export default {
   deleteAsync,
   closeRedisConnection,
   isRedisAvailable,
+  getEncryptionConfig,
 };

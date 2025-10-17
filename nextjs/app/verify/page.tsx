@@ -356,17 +356,39 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
     );
   }
 
-  // Get encryption config from environment (matching C# GetEncryptionConfig)
-  const key = process.env.ENCRYPTION_KEY;
-  const iv = process.env.ENCRYPTION_IV;
+  // Get encryption config from Redis or environment (matching C# GetEncryptionConfig)
+  // Matches C# VerifyController.cs lines 182-184: var ec = GetEncryptionConfig(org);
+  const { getEncryptionConfig } = await import('@/lib/redis');
+  const encryptionConfig = await getEncryptionConfig(org);
 
+  if (!encryptionConfig) {
+    return (
+      <PageLayout lang={lang} currentUrl={baseUrl}>
+        <VerifyView
+          verifyData={{
+            status: 'FAILED',
+            message: 'Server Configuration Error - Missing encryption keys',
+            scanData: null,
+            productData: null,
+            theme: selectedTheme,
+            language: lang,
+          }}
+        />
+      </PageLayout>
+    );
+  }
+
+  const key = encryptionConfig.Encryption_Key;
+  const iv = encryptionConfig.Encryption_Iv;
+
+  // Matches C# VerifyController.cs lines 185-196: if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(iv))
   if (!key || !iv) {
     return (
       <PageLayout lang={lang} currentUrl={baseUrl}>
         <VerifyView
           verifyData={{
             status: 'FAILED',
-            message: 'Server Configuration Error',
+            message: 'Server Configuration Error - Invalid encryption keys',
             scanData: null,
             productData: null,
             theme: selectedTheme,
