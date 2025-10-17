@@ -41,7 +41,7 @@ WORKDIR /app
 # Set production environment
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=5001
+ENV PORT=5000
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
@@ -59,11 +59,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public/
 USER nextjs
 
 # Expose port
-EXPOSE 5001
+EXPOSE 5000
 
 # Health check (using 0.0.0.0 to match Next.js listen address)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://127.0.0.1:5001/test', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
+  CMD node -e "require('http').get('http://127.0.0.1:5000/test', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
 
 # Start the application
 CMD ["node", "server.js"]
