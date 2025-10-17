@@ -3,13 +3,11 @@
  * Logs all requests with performance metrics and custom status
  * Ported from Middlewares/AuditLogMiddleware.cs
  * 
- * Runtime: Edge (required for Next.js 15 middleware)
+ * Note: Next.js 15 middleware runs in Edge Runtime by default
+ * No need to explicitly declare runtime
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-
-// Explicitly declare Edge Runtime compatibility
-export const runtime = 'edge';
 
 // Audit log structure matching the C# implementation
 interface AuditLog {
