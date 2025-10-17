@@ -276,7 +276,7 @@ export async function getEncryptionConfig(org: string): Promise<EncryptionConfig
     // C# uses: ASPNETCORE_ENVIRONMENT (Development, Production, Staging)
     // Next.js uses: NODE_ENV (development, production, test)
     const nodeEnv = process.env.NODE_ENV || 'development';
-console.log(`@@@@ P'James debug nodeEnv: ${nodeEnv}`);
+console.log(`@@@@ P'James debug nodeEnv: [${nodeEnv}]`);
 
     const env = nodeEnv === 'production' ? 'Production' : 
                 nodeEnv === 'test' ? 'Test' : 
