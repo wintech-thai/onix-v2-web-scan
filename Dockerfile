@@ -18,13 +18,19 @@ WORKDIR /app
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy application code
+# Copy application code (includes public folder)
 COPY nextjs/ ./
+
+# Verify public folder exists before build
+RUN echo "Checking public folder before build:" && ls -la /app/public || echo "Public folder not found!"
 
 # Build Next.js application
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 RUN npm run build
+
+# Verify public folder exists after build
+RUN echo "Checking public folder after build:" && ls -la /app/public || echo "Public folder missing after build!"
 
 # -------------------------------
 # Stage 3: Runner
@@ -41,10 +47,13 @@ ENV PORT=5001
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy standalone build
-COPY --from=builder /app/public ./public
+# Copy Next.js standalone output
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copy public folder if it exists (Next.js standalone doesn't include it)
+# We need to copy the entire directory including subdirectories
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public/
 
 # Switch to non-root user
 USER nextjs
@@ -52,9 +61,9 @@ USER nextjs
 # Expose port
 EXPOSE 5001
 
-# Health check
+# Health check (using 0.0.0.0 to match Next.js listen address)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:5001/test', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "require('http').get('http://127.0.0.1:5001/test', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
 
 # Start the application
 CMD ["node", "server.js"]
