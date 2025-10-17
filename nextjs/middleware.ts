@@ -2,9 +2,14 @@
  * Audit logging middleware for Onix v2 Web Scan
  * Logs all requests with performance metrics and custom status
  * Ported from Middlewares/AuditLogMiddleware.cs
+ * 
+ * Runtime: Edge (required for Next.js 15 middleware)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+// Explicitly declare Edge Runtime compatibility
+export const runtime = 'edge';
 
 // Audit log structure matching the C# implementation
 interface AuditLog {
@@ -79,6 +84,7 @@ export async function middleware(request: NextRequest) {
   const responseSize = 0; // Will be set by the actual response
   
   // Build audit log object
+  // Note: process.env is available in Edge Runtime for build-time env vars
   const auditLog: AuditLog = {
     Host: host,
     HttpMethod: method,
@@ -94,7 +100,7 @@ export async function middleware(request: NextRequest) {
     CfClientIp: cfClientIp,
     CustomStatus: customStatus,
     CustomDesc: response.status !== 200 ? response.statusText : '',
-    Environment: process.env.NODE_ENV,
+    Environment: process.env.NODE_ENV || 'production',
     userInfo: {
       // Add user info extraction logic here
     },
@@ -114,7 +120,8 @@ export async function middleware(request: NextRequest) {
  * @param auditLog - Audit log object
  */
 async function sendAuditLog(auditLog: AuditLog): Promise<void> {
-  const logEndpoint = process.env.LOG_ENDPOINT;
+  // Edge Runtime compatible environment variable access
+  const logEndpoint = process.env.NEXT_PUBLIC_LOG_ENDPOINT;
   
   if (!logEndpoint) {
     // No endpoint configured, skip

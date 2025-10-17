@@ -59,7 +59,8 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
   const status = verifyData.status?.toUpperCase() || 'UNKNOWN';
   const isSuccess = ['OK', 'SUCCESS', 'VALID'].includes(status);
   const isWarning = ['ALREADY_REGISTERED', 'EXPIRED'].includes(status);
-  const isError = !isSuccess && !isWarning;
+  // Explicitly treat DECRYPT_ERROR and DECRYPT_FAIL as errors (red styling)
+  const isError = (!isSuccess && !isWarning) || ['DECRYPT_ERROR', 'DECRYPT_FAIL'].includes(status);
 
   // Get language (default Thai) and translations
   const lang = (verifyData.language || 'th') as Language;
