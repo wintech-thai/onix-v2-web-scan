@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("onix-v2-web-scan")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a05552ceaed65d78cc0c7a11df8988eadb2bc5ee")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+63b21a505403f02ddc653d299330aa3369574032")]
 [assembly: System.Reflection.AssemblyProductAttribute("onix-v2-web-scan")]
 [assembly: System.Reflection.AssemblyTitleAttribute("onix-v2-web-scan")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
