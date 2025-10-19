@@ -51,7 +51,7 @@ export function getVersionInfo() {
     version: getAppVersion(),
     commit: getGitCommitId(),
     buildTime: getBuildTimestamp(),
-    nodeEnv: process.env.NODE_ENV || 'development',
+    nodeEnv: process.env.RUNTIME_ENV || 'development',
   };
 }
 

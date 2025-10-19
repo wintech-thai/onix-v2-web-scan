@@ -22,7 +22,7 @@ if (!versionLogged) {
   console.log(`📦 Version:    ${version}`);
   console.log(`🔖 Commit ID:  ${commitId}`);
   console.log(`🕐 Build Time: ${buildTime}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🌍 Environment: ${process.env.RUNTIME_ENV || 'development'}`);
   console.log('═══════════════════════════════════════════════════');
   
   versionLogged = true;

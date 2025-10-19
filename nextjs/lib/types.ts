@@ -124,7 +124,7 @@ export interface EnvironmentVariables {
   REDIS_PORT?: string;
   ENCRYPTION_KEY: string;
   ENCRYPTION_IV: string;
-  NODE_ENV?: 'development' | 'production' | 'test';
+  RUNTIME_ENV?: 'development' | 'production' | 'test';
 }
 
 // ============================================================================
