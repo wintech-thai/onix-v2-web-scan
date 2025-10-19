@@ -30,18 +30,38 @@ export function getRedisClient(): RedisClient | null {
   }
 
   try {
+    // Get Redis password and TLS settings (for production)
+    const redisPassword = process.env.REDIS_PASSWORD;
+    const redisTls = process.env.REDIS_TLS === 'true';
+
     // Create new Redis client
-    redisClient = new Redis({
+    const redisOptions: any = {
       host: redisHost,
       port: parseInt(redisPort, 10),
-      retryStrategy: (times) => {
+      retryStrategy: (times: number) => {
         const delay = Math.min(times * 50, 2000);
         return delay;
       },
       maxRetriesPerRequest: 3,
       enableOfflineQueue: false,
       lazyConnect: false,
-    });
+    };
+
+    // Add password if provided (production Redis)
+    if (redisPassword) {
+      redisOptions.password = redisPassword;
+      console.log('Redis password authentication enabled');
+    }
+
+    // Enable TLS if configured (production Redis)
+    if (redisTls) {
+      redisOptions.tls = {
+        rejectUnauthorized: false, // For self-signed certificates in private cloud
+      };
+      console.log('Redis TLS/SSL enabled');
+    }
+
+    redisClient = new Redis(redisOptions);
 
     // Handle connection events
     redisClient.on('connect', () => {
@@ -275,8 +295,9 @@ export async function getEncryptionConfig(org: string): Promise<EncryptionConfig
     // Normalize environment name to match C# convention
     // C# uses: ASPNETCORE_ENVIRONMENT (Development, Production, Staging)
     // Next.js uses: NODE_ENV (development, production, test)
-    const nodeEnv = process.env.RUNTIME_ENV || 'development';
-console.log(`@@@@ P'James debug nodeEnv: [${nodeEnv}] [${process.env.RUNTIME_ENV}]`);
+    // Use NODE_ENV by default, but allow RUNTIME_ENV override for Kubernetes
+    const nodeEnv = process.env.NODE_ENV || 'development';
+    console.log(`@@@@ P'James debug nodeEnv: [${nodeEnv}]`);
 
     const env = nodeEnv === 'production' ? 'Production' : 
                 nodeEnv === 'test' ? 'Test' : 
@@ -308,8 +329,39 @@ console.log(`@@@@ P'James debug nodeEnv: [${nodeEnv}] [${process.env.RUNTIME_ENV
     }
 
     // Parse Redis response
-    const config: EncryptionConfig = JSON.parse(configJson);
+    const rawConfig: any = JSON.parse(configJson);
     console.log('✓ Successfully fetched encryption config from Redis');
+    console.log('Raw config from Redis:', rawConfig);
+    
+    // Support both naming conventions:
+    // 1. PascalCase: Encryption_Key, Encryption_Iv (C# convention)
+    // 2. lowercase: encryption_key, encryption_iv (common convention)
+    const config: EncryptionConfig = {
+      Encryption_Key: rawConfig.Encryption_Key || rawConfig.encryption_key || '',
+      Encryption_Iv: rawConfig.Encryption_Iv || rawConfig.encryption_iv || '',
+    };
+
+    // Validate we got the keys
+    if (!config.Encryption_Key || !config.Encryption_Iv) {
+      console.error('Invalid encryption config from Redis. Missing key or IV.');
+      console.error('Expected: Encryption_Key/encryption_key and Encryption_Iv/encryption_iv');
+      console.error('Got:', rawConfig);
+      
+      // Fallback to environment variables
+      const key = process.env.ENCRYPTION_KEY;
+      const iv = process.env.ENCRYPTION_IV;
+
+      if (!key || !iv) {
+        console.error('Fallback failed: ENCRYPTION_KEY or ENCRYPTION_IV not set');
+        return null;
+      }
+
+      console.log('Using environment variable fallback');
+      return {
+        Encryption_Key: key,
+        Encryption_Iv: iv,
+      };
+    }
     
     return config;
 
