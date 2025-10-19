@@ -294,14 +294,14 @@ export async function getEncryptionConfig(org: string): Promise<EncryptionConfig
   try {
     // Normalize environment name to match C# convention
     // C# uses: ASPNETCORE_ENVIRONMENT (Development, Production, Staging)
-    // Next.js uses: NODE_ENV (development, production, test)
-    // Use NODE_ENV by default, but allow RUNTIME_ENV override for Kubernetes
-    const nodeEnv = process.env.RUNTIME_ENV || 'development';
-    console.log(`@@@@ P'James debug nodeEnv: [${nodeEnv}] [${process.env.RUNTIME_ENV}]`);
+    // We use: RUNTIME_ENV (Kubernetes deployment) - explicit environment name
+    // Priority: RUNTIME_ENV (Kubernetes) > NODE_ENV (Next.js default) > 'development' (fallback)
+    const runtimeEnv = process.env.RUNTIME_ENV || 'development';
+    console.log(`@@@@ P'James debug runtimeEnv: [${runtimeEnv}] [RUNTIME_ENV: ${process.env.RUNTIME_ENV}]`);
     
 
-    const env = nodeEnv === 'production' ? 'Production' : 
-                nodeEnv === 'test' ? 'Test' : 
+    const env = runtimeEnv === 'production' ? 'Production' : 
+                runtimeEnv === 'test' ? 'Test' : 
                 'Development';
 
     // Build cache key matching C# pattern: CacheLoader:{env}:ScanItemActions:{org}

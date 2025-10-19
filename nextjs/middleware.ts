@@ -117,7 +117,7 @@ export async function middleware(request: NextRequest) {
     CfClientIp: cfClientIp,
     CustomStatus: customStatus,
     CustomDesc: response.status !== 200 ? response.statusText : '',
-    Environment: process.env.NODE_ENV || 'production',
+    Environment: process.env.RUNTIME_ENV || 'production',
     userInfo: {
       // Add user info extraction logic here
     },

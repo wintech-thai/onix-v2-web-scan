@@ -263,9 +263,9 @@ export const translations: Record<Language, Translations> = {
     theme: 'Theme',
     
     statusBadge: {
-      success: '✓ Verified',
-      warning: '⚠️ Warning',
-      error: '⚠️ Issue Detected',
+      success: 'Verified',
+      warning: 'Warning',
+      error: 'Issue Detected',
     },
     
     titles: {
