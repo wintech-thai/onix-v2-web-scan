@@ -19,6 +19,7 @@ WORKDIR /app
 ARG GIT_COMMIT=unknown
 ARG BUILD_TIMESTAMP
 ARG APP_VERSION=2.0.0
+ARG RUNTIME_ENV=production
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
@@ -32,7 +33,7 @@ RUN echo "Checking public folder before build:" && ls -la /app/public || echo "P
 # Set build-time environment variables for Next.js
 # These will be embedded in the build output
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
+ENV NODE_ENV=${RUNTIME_ENV}
 ENV NEXT_PUBLIC_GIT_COMMIT=${GIT_COMMIT}
 ENV NEXT_PUBLIC_BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
 ENV NEXT_PUBLIC_APP_VERSION=${APP_VERSION}
@@ -58,10 +59,12 @@ RUN echo "Checking public folder after build:" && ls -la /app/public || echo "Pu
 FROM node:22.17.1-alpine3.22 AS runner
 WORKDIR /app
 
+# Accept runtime environment argument
+ARG RUNTIME_ENV=production
+
 # Set production environment
-ENV NODE_ENV=production
+ENV NODE_ENV=${RUNTIME_ENV}
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=5000
 ENV HOSTNAME=0.0.0.0
 
 # Create non-root user
@@ -79,12 +82,13 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public/
 # Switch to non-root user
 USER nextjs
 
-# Expose port
-EXPOSE 5000
+# Expose port (default 5000, can be overridden at runtime)
+EXPOSE ${PORT:-5000}
 
 # Health check (using 0.0.0.0 to match Next.js listen address)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://127.0.0.1:5000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
 
 # Start the application
-CMD ["node", "server.js"]
+# PORT will be read from environment variable at runtime, defaults to 5000 if not set
+CMD ["sh", "-c", "PORT=${PORT:-5000} node server.js"]
