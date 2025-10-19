@@ -296,8 +296,9 @@ export async function getEncryptionConfig(org: string): Promise<EncryptionConfig
     // C# uses: ASPNETCORE_ENVIRONMENT (Development, Production, Staging)
     // Next.js uses: NODE_ENV (development, production, test)
     // Use NODE_ENV by default, but allow RUNTIME_ENV override for Kubernetes
-    const nodeEnv = process.env.NODE_ENV || 'development';
-    console.log(`@@@@ P'James debug nodeEnv: [${nodeEnv}]`);
+    const nodeEnv = process.env.RUNTIME_ENV || 'development';
+    console.log(`@@@@ P'James debug nodeEnv: [${nodeEnv}] [${process.env.RUNTIME_ENV}]`);
+    
 
     const env = nodeEnv === 'production' ? 'Production' : 
                 nodeEnv === 'test' ? 'Test' : 

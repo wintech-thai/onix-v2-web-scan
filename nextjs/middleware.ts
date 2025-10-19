@@ -9,6 +9,25 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+// Log version info on first load (using a flag to prevent multiple logs)
+let versionLogged = false;
+if (!versionLogged) {
+  const commitId = process.env.NEXT_PUBLIC_GIT_COMMIT || process.env.GIT_COMMIT || 'unknown';
+  const version = process.env.NEXT_PUBLIC_APP_VERSION || '2.0.0';
+  const buildTime = process.env.NEXT_PUBLIC_BUILD_TIMESTAMP || 'unknown';
+  
+  console.log('═══════════════════════════════════════════════════');
+  console.log('🚀 ONIX v2 Web Scan - Application Started');
+  console.log('═══════════════════════════════════════════════════');
+  console.log(`📦 Version:    ${version}`);
+  console.log(`🔖 Commit ID:  ${commitId}`);
+  console.log(`🕐 Build Time: ${buildTime}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log('═══════════════════════════════════════════════════');
+  
+  versionLogged = true;
+}
+
 // Audit log structure matching the C# implementation
 interface AuditLog {
   Host: string;

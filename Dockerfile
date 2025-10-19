@@ -15,6 +15,11 @@ RUN npm ci
 FROM node:22.17.1-alpine3.22 AS builder
 WORKDIR /app
 
+# Accept build arguments for version tracking
+ARG GIT_COMMIT=unknown
+ARG BUILD_TIMESTAMP
+ARG APP_VERSION=2.0.0
+
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
@@ -24,9 +29,24 @@ COPY nextjs/ ./
 # Verify public folder exists before build
 RUN echo "Checking public folder before build:" && ls -la /app/public || echo "Public folder not found!"
 
-# Build Next.js application
+# Set build-time environment variables for Next.js
+# These will be embedded in the build output
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV NEXT_PUBLIC_GIT_COMMIT=${GIT_COMMIT}
+ENV NEXT_PUBLIC_BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
+ENV NEXT_PUBLIC_APP_VERSION=${APP_VERSION}
+
+# Log build information
+RUN echo "════════════════════════════════════════════" && \
+    echo "Building ONIX v2 Web Scan" && \
+    echo "════════════════════════════════════════════" && \
+    echo "Version:    ${APP_VERSION}" && \
+    echo "Commit ID:  ${GIT_COMMIT}" && \
+    echo "Build Time: ${BUILD_TIMESTAMP}" && \
+    echo "════════════════════════════════════════════"
+
+# Build Next.js application
 RUN npm run build
 
 # Verify public folder exists after build
