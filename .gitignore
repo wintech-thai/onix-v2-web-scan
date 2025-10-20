@@ -1,7 +1,56 @@
+# Environment variables
 .env
+.env.local
+.env.development
+.env.production
+
+# Python
 __pycache__/*
 *.pyc
+
+# C# Build artifacts
 obj/*
 bin/*
+
+# Source maps
 *.js.map
 *.css.map
+
+# Next.js (in nextjs/ folder)
+nextjs/.next/
+nextjs/out/
+nextjs/build/
+nextjs/dist/
+nextjs/.env.local
+nextjs/.env.development
+nextjs/.env.production
+
+# Dependencies (in nextjs/ folder)
+nextjs/node_modules/
+
+# Testing
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Agent structure directories (tasks, memory, docs)
+.github/tasks/
+.github/memory/
+docs/
+
+# Keep specific instruction files
+!.github/instructions/
+
+# Ignore old copilot instruction files
+.github/copilot-instructions-old.md
+.github/copilot-instructions.md
