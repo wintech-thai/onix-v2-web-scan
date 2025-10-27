@@ -32,20 +32,31 @@ function decodeProxyUrl(encodedUrl: string): string {
     // Validate URL format
     const url = new URL(decoded);
 
-    // Security: Only allow URLs to configured backend domains
-    const apiBaseUrl = process.env.API_BASE_URL;
-    if (!apiBaseUrl) {
-      throw new Error("API_BASE_URL not configured");
-    }
-
-    // Extract allowed domains from API_BASE_URL and common backend patterns
+    // Security: Whitelist of allowed backend domains
+    // Add your production/staging domains here
     const allowedDomains = [
-      new URL(apiBaseUrl).hostname,
       "api-dev.please-scan.com",
       "scan-dev.please-scan.com",
       "api.please-scan.com",
       "scan.please-scan.com",
+      "api-staging.please-scan.com",
+      "scan-staging.please-scan.com",
+      "localhost", // For local development
+      "127.0.0.1", // For local development
     ];
+
+    // Optional: Also allow domain from API_BASE_URL if configured
+    const apiBaseUrl = process.env.API_BASE_URL;
+    if (apiBaseUrl) {
+      try {
+        const configuredDomain = new URL(apiBaseUrl).hostname;
+        if (!allowedDomains.includes(configuredDomain)) {
+          allowedDomains.push(configuredDomain);
+        }
+      } catch {
+        // Ignore invalid API_BASE_URL
+      }
+    }
 
     // Check if the decoded URL hostname is in allowed list
     if (!allowedDomains.includes(url.hostname)) {
