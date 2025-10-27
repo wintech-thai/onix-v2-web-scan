@@ -14,6 +14,12 @@
 
 import React from "react";
 import { decrypt } from "@/lib/encryption";
+import {
+  getEncryptionConfig,
+  validateConfiguration,
+  getDeploymentMode,
+  DeploymentMode,
+} from "@/lib/redis";
 import type {
   VerifyViewModel,
   VerifyPayload,
@@ -264,18 +270,47 @@ async function verifyDataDirect(
   theme?: string,
 ): Promise<VerifyPayload | null> {
   try {
-    // Get encryption credentials from environment
-    const encryptionKey = process.env.ENCRYPTION_KEY;
-    const encryptionIV = process.env.ENCRYPTION_IV;
+    // Validate configuration for current deployment mode (strict enforcement)
+    try {
+      validateConfiguration();
+    } catch (configError) {
+      console.error("Configuration validation failed:", configError);
+      const mode = getDeploymentMode();
+      return {
+        status: "ERROR",
+        descriptionThai:
+          mode === DeploymentMode.SERVER
+            ? "การกำหนดค่า Redis ไม่ถูกต้อง กรุณาตรวจสอบการตั้งค่า"
+            : "การกำหนดค่า Environment Variables ไม่ถูกต้อง",
+        descriptionEng:
+          mode === DeploymentMode.SERVER
+            ? "Redis configuration error. Please check server configuration."
+            : "Environment variables configuration error. Please check ENCRYPTION_KEY and ENCRYPTION_IV.",
+      };
+    }
 
-    if (!encryptionKey || !encryptionIV) {
-      console.error("Missing encryption credentials in environment variables");
+    // Get encryption credentials from Redis (SERVER mode) or environment (LOCAL mode)
+    // STRICT MODE: No fallbacks between modes
+    const encryptionConfig = await getEncryptionConfig(org);
+
+    if (
+      !encryptionConfig ||
+      !encryptionConfig.Encryption_Key ||
+      !encryptionConfig.Encryption_Iv
+    ) {
+      console.error("Failed to get encryption credentials");
       return {
         status: "ERROR",
         descriptionThai: "การกำหนดค่าเซิร์ฟเวอร์ไม่ถูกต้อง",
         descriptionEng: "Server configuration error",
       };
     }
+
+    const encryptionKey = encryptionConfig.Encryption_Key;
+    const encryptionIV = encryptionConfig.Encryption_Iv;
+    console.log(
+      `✅ Successfully retrieved encryption config (key length: ${encryptionKey.length}, IV length: ${encryptionIV.length})`,
+    );
 
     // Decrypt the data
     let decryptedData: string;

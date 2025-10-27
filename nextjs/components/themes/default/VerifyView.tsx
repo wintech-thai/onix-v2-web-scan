@@ -497,7 +497,21 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
         ) : (
           <button
             type="button"
-            className="w-full py-3 px-4 text-white font-semibold rounded-lg transition-colors mb-4 border-0"
+            onClick={() => {
+              const params = new URLSearchParams();
+              if (verifyData.scanData?.serial) {
+                params.set("serial", verifyData.scanData.serial);
+              }
+              if (verifyData.scanData?.pin) {
+                params.set("pin", verifyData.scanData.pin);
+              }
+              if (verifyData.scanData?.orgId) {
+                params.set("brand", verifyData.scanData.orgId);
+              }
+              params.set("lang", lang);
+              window.location.href = `/contact-support?${params.toString()}`;
+            }}
+            className="w-full py-3 px-4 text-white font-semibold rounded-lg transition-colors mb-4 border-0 cursor-pointer"
             style={{
               background: "linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)",
               boxShadow: "0 2px 8px rgba(255, 107, 107, 0.3)",
@@ -512,6 +526,9 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
             }}
           >
             <span className="inline-flex items-center justify-center gap-2">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2M20 16H5.2L4 17.2V4H20V16M11 5H13V11H11V5M11 13H13V15H11V13Z" />
+              </svg>
               {t.labels.contactSupport}
             </span>
           </button>
