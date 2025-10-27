@@ -23,10 +23,16 @@ export interface VerifyViewModel {
   productData: ProductApiResponse | null;
   productUrl?: string; // URL for lazy loading product data on client-side
   theme: string;
-  language?: 'th' | 'en'; // Language preference (default: th)
+  language?: "th" | "en"; // Language preference (default: th)
   ttl?: number;
   createdDate?: string; // ISO date string
   expiryDate?: string; // ISO date string
+  registeredEmail?: string; // Email address used for registration (if already registered)
+  // Backend API URLs (proxied through /api/proxy)
+  getCustomerUrl?: string; // URL to check customer registration status
+  registerCustomerUrl?: string; // URL to register customer
+  requestOtpViaEmailUrl?: string; // URL to request OTP via email
+  getProductUrl?: string; // URL to get product details
 }
 
 export interface VerifyPayload {
@@ -36,6 +42,10 @@ export interface VerifyPayload {
   scanItem?: ScanItem;
   redirectUrl?: string;
   getProductUrl?: string;
+  getCustomerUrl?: string; // URL to check customer registration status
+  registerCustomerUrl?: string; // URL to register customer
+  requestOtpViaEmailUrl?: string; // URL to request OTP via email
+  themeVerify?: string; // Theme name from backend
   dataGeneratedDate?: string; // ISO date string
   ttlMinute?: number; // Time to live in minutes
   productData?: ProductApiResponse; // Fetched from Product API
@@ -57,6 +67,7 @@ export interface ScanItem {
   usedFlag?: string;
   createdDate?: string; // ISO date string
   registeredDate?: string; // ISO date string
+  registeredEmail?: string; // Email address used for registration
 }
 
 // ============================================================================
@@ -103,17 +114,17 @@ export interface ProductImage {
 // ============================================================================
 
 export type VerificationStatus =
-  | 'VALID'
-  | 'INVALID'
-  | 'EXPIRED'
-  | 'ERROR'
-  | 'OK'
-  | 'SUCCESS'
-  | 'ALREADY_REGISTERED'
-  | 'NOTFOUND'
-  | 'FAILED';
+  | "VALID"
+  | "INVALID"
+  | "EXPIRED"
+  | "ERROR"
+  | "OK"
+  | "SUCCESS"
+  | "ALREADY_REGISTERED"
+  | "NOTFOUND"
+  | "FAILED";
 
-export type StatusBadgeClass = 'vx-badge ok' | 'vx-badge warn' | 'vx-badge err';
+export type StatusBadgeClass = "vx-badge ok" | "vx-badge warn" | "vx-badge err";
 
 // ============================================================================
 // Environment Variables (for reference only)
@@ -124,7 +135,7 @@ export interface EnvironmentVariables {
   REDIS_PORT?: string;
   ENCRYPTION_KEY: string;
   ENCRYPTION_IV: string;
-  RUNTIME_ENV?: 'development' | 'production' | 'test';
+  RUNTIME_ENV?: "development" | "production" | "test";
 }
 
 // ============================================================================
@@ -134,20 +145,65 @@ export interface EnvironmentVariables {
 export class DecryptionError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'DecryptionError';
+    this.name = "DecryptionError";
   }
 }
 
 export class RedisConnectionError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'RedisConnectionError';
+    this.name = "RedisConnectionError";
   }
 }
 
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
+}
+
+// ============================================================================
+// Customer Registration API Types
+// ============================================================================
+
+export interface GetCustomerApiResponse {
+  status: string; // SUCCESS, CUSTOMER_NOT_ATTACH, CUSTOMER_NOTFOUND, ERROR, etc.
+  description?: string;
+  descriptionThai?: string;
+  descriptionEng?: string;
+  email?: string; // Registered email if status is SUCCESS
+  data?: {
+    customerId?: string;
+    email?: string;
+    registeredDate?: string;
+    [key: string]: unknown;
+  };
+}
+
+export interface SendOtpApiRequest {
+  email: string;
+}
+
+export interface SendOtpApiResponse {
+  status: string; // SUCCESS, ERROR, etc.
+  description?: string;
+  descriptionThai?: string;
+  descriptionEng?: string;
+  otpRefCode?: string; // Reference code for OTP
+  expirySeconds?: number; // OTP validity duration
+}
+
+export interface VerifyOtpApiRequest {
+  email: string;
+  otp: string;
+  otpRefCode?: string;
+}
+
+export interface VerifyOtpApiResponse {
+  status: string; // SUCCESS, ERROR, INVALID_OTP, EXPIRED_OTP, etc.
+  description?: string;
+  descriptionThai?: string;
+  descriptionEng?: string;
+  token?: string; // Auth token after successful verification
 }
