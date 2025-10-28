@@ -2,13 +2,91 @@
  * Redis helper utilities for Onix v2 Web Scan
  * Implements Redis connection and caching functionality
  * Ported from Utils/RedisHelper.cs
+ *
+ * STRICT MODE ENFORCEMENT:
+ * - SERVER (deployed): MUST use Redis only - NO env var fallback
+ * - LOCAL (development): MUST use env vars only - NO Redis
  */
 
-import Redis, { Redis as RedisClient } from 'ioredis';
-import { RedisConnectionError } from './types';
+import Redis, { Redis as RedisClient } from "ioredis";
+import { RedisConnectionError } from "./types";
 
 // Singleton Redis client instance
 let redisClient: RedisClient | null = null;
+
+/**
+ * Deployment mode detection
+ * STRICT RULES:
+ * - If REDIS_HOST is set → SERVER mode (use Redis ONLY)
+ * - If REDIS_HOST not set → LOCAL mode (use env vars ONLY)
+ */
+export enum DeploymentMode {
+  LOCAL = "LOCAL", // Local development machine - use env vars only
+  SERVER = "SERVER", // Deployed server (dev/prod) - use Redis only
+}
+
+/**
+ * Detect current deployment mode
+ * @returns DeploymentMode.SERVER if REDIS_HOST is set, otherwise DeploymentMode.LOCAL
+ */
+export function getDeploymentMode(): DeploymentMode {
+  const redisHost = process.env.REDIS_HOST;
+  return redisHost ? DeploymentMode.SERVER : DeploymentMode.LOCAL;
+}
+
+/**
+ * Validate configuration for current deployment mode
+ * @throws Error if configuration is invalid
+ */
+export function validateConfiguration(): void {
+  const mode = getDeploymentMode();
+
+  if (mode === DeploymentMode.SERVER) {
+    // SERVER mode: Redis MUST be configured
+    const redisHost = process.env.REDIS_HOST;
+    const redisPort = process.env.REDIS_PORT;
+
+    if (!redisHost || !redisPort) {
+      throw new Error(
+        "🚨 CONFIGURATION ERROR [SERVER MODE]:\n" +
+          "   Redis configuration is REQUIRED when REDIS_HOST is set.\n" +
+          "   Missing: " +
+          (!redisHost ? "REDIS_HOST" : "REDIS_PORT") +
+          "\n" +
+          "   Server deployments MUST use Redis for encryption keys.\n" +
+          "   Environment variables ENCRYPTION_KEY/ENCRYPTION_IV are IGNORED in server mode.",
+      );
+    }
+
+    console.log("✅ Configuration validated: SERVER mode (Redis required)");
+    console.log(`   Redis: ${redisHost}:${redisPort}`);
+    console.log("   Encryption keys will be loaded from Redis ONLY");
+  } else {
+    // LOCAL mode: Env vars MUST be configured
+    const encryptionKey = process.env.ENCRYPTION_KEY;
+    const encryptionIV = process.env.ENCRYPTION_IV;
+
+    if (!encryptionKey || !encryptionIV) {
+      throw new Error(
+        "🚨 CONFIGURATION ERROR [LOCAL MODE]:\n" +
+          "   Environment variables ENCRYPTION_KEY and ENCRYPTION_IV are REQUIRED.\n" +
+          "   Missing: " +
+          (!encryptionKey ? "ENCRYPTION_KEY" : "") +
+          (!encryptionIV ? " ENCRYPTION_IV" : "") +
+          "\n" +
+          "   Local development MUST use environment variables.\n" +
+          "   Set REDIS_HOST if you want to use Redis instead.",
+      );
+    }
+
+    console.log(
+      "✅ Configuration validated: LOCAL mode (Environment variables)",
+    );
+    console.log(
+      "   Encryption keys will be loaded from environment variables ONLY",
+    );
+  }
+}
 
 /**
  * Gets or creates a Redis client instance (singleton pattern)
@@ -16,7 +94,7 @@ let redisClient: RedisClient | null = null;
  */
 export function getRedisClient(): RedisClient | null {
   // Return existing client if already connected
-  if (redisClient && redisClient.status === 'ready') {
+  if (redisClient && redisClient.status === "ready") {
     return redisClient;
   }
 
@@ -25,14 +103,16 @@ export function getRedisClient(): RedisClient | null {
   const redisPort = process.env.REDIS_PORT;
 
   if (!redisHost || !redisPort) {
-    console.log('Redis configuration not found. Running in local mode without Redis.');
+    console.log(
+      "Redis configuration not found. Running in local mode without Redis.",
+    );
     return null;
   }
 
   try {
     // Get Redis password and TLS settings (for production)
     const redisPassword = process.env.REDIS_PASSWORD;
-    const redisTls = process.env.REDIS_TLS === 'true';
+    const redisTls = process.env.REDIS_TLS === "true";
 
     // Create new Redis client
     const redisOptions: any = {
@@ -50,7 +130,7 @@ export function getRedisClient(): RedisClient | null {
     // Add password if provided (production Redis)
     if (redisPassword) {
       redisOptions.password = redisPassword;
-      console.log('Redis password authentication enabled');
+      console.log("Redis password authentication enabled");
     }
 
     // Enable TLS if configured (production Redis)
@@ -58,27 +138,27 @@ export function getRedisClient(): RedisClient | null {
       redisOptions.tls = {
         rejectUnauthorized: false, // For self-signed certificates in private cloud
       };
-      console.log('Redis TLS/SSL enabled');
+      console.log("Redis TLS/SSL enabled");
     }
 
     redisClient = new Redis(redisOptions);
 
     // Handle connection events
-    redisClient.on('connect', () => {
-      console.log('✅ Redis connected successfully');
+    redisClient.on("connect", () => {
+      console.log("✅ Redis connected successfully");
     });
 
-    redisClient.on('error', (err) => {
-      console.error('❌ Redis connection error:', err.message);
+    redisClient.on("error", (err) => {
+      console.error("❌ Redis connection error:", err.message);
     });
 
-    redisClient.on('close', () => {
-      console.log('Redis connection closed');
+    redisClient.on("close", () => {
+      console.log("Redis connection closed");
     });
 
     return redisClient;
   } catch (error) {
-    console.error('Failed to create Redis client:', error);
+    console.error("Failed to create Redis client:", error);
     return null;
   }
 }
@@ -93,11 +173,11 @@ export function getRedisClient(): RedisClient | null {
 export async function setAsync(
   key: string,
   value: string,
-  expirySeconds?: number
+  expirySeconds?: number,
 ): Promise<boolean> {
   const client = getRedisClient();
   if (!client) {
-    console.warn('Redis not available. Skipping cache set.');
+    console.warn("Redis not available. Skipping cache set.");
     return false;
   }
 
@@ -109,7 +189,7 @@ export async function setAsync(
     }
     return true;
   } catch (error) {
-    console.error('Redis setAsync error:', error);
+    console.error("Redis setAsync error:", error);
     return false;
   }
 }
@@ -129,7 +209,7 @@ export async function getAsync(key: string): Promise<string | null> {
     const value = await client.get(key);
     return value;
   } catch (error) {
-    console.error('Redis getAsync error:', error);
+    console.error("Redis getAsync error:", error);
     return null;
   }
 }
@@ -144,13 +224,13 @@ export async function getAsync(key: string): Promise<string | null> {
 export async function setObjectAsync<T>(
   key: string,
   obj: T,
-  expirySeconds?: number
+  expirySeconds?: number,
 ): Promise<boolean> {
   try {
     const json = JSON.stringify(obj);
     return await setAsync(key, json, expirySeconds);
   } catch (error) {
-    console.error('Redis setObjectAsync error:', error);
+    console.error("Redis setObjectAsync error:", error);
     return false;
   }
 }
@@ -171,7 +251,7 @@ export async function getObjectAsync<T>(key: string): Promise<T | null> {
     const obj = JSON.parse(value) as T;
     return obj;
   } catch (error) {
-    console.error('Redis getObjectAsync error:', error);
+    console.error("Redis getObjectAsync error:", error);
     return null;
   }
 }
@@ -184,20 +264,20 @@ export async function getObjectAsync<T>(key: string): Promise<T | null> {
  */
 export async function publishMessageAsync(
   stream: string,
-  message: string
+  message: string,
 ): Promise<string | null> {
   const client = getRedisClient();
   if (!client) {
-    console.warn('Redis not available. Skipping message publish.');
+    console.warn("Redis not available. Skipping message publish.");
     return null;
   }
 
   try {
     // Add message to stream with auto-generated ID
-    const messageId = await client.xadd(stream, '*', 'message', message);
+    const messageId = await client.xadd(stream, "*", "message", message);
     return messageId;
   } catch (error) {
-    console.error('Redis publishMessageAsync error:', error);
+    console.error("Redis publishMessageAsync error:", error);
     return null;
   }
 }
@@ -217,7 +297,7 @@ export async function deleteAsync(key: string): Promise<boolean> {
     const result = await client.del(key);
     return result > 0;
   } catch (error) {
-    console.error('Redis deleteAsync error:', error);
+    console.error("Redis deleteAsync error:", error);
     return false;
   }
 }
@@ -230,9 +310,9 @@ export async function closeRedisConnection(): Promise<void> {
   if (redisClient) {
     try {
       await redisClient.quit();
-      console.log('Redis connection closed gracefully');
+      console.log("Redis connection closed gracefully");
     } catch (error) {
-      console.error('Error closing Redis connection:', error);
+      console.error("Error closing Redis connection:", error);
     } finally {
       redisClient = null;
     }
@@ -244,7 +324,7 @@ export async function closeRedisConnection(): Promise<void> {
  * @returns True if connected, false otherwise
  */
 export function isRedisAvailable(): boolean {
-  return redisClient !== null && redisClient.status === 'ready';
+  return redisClient !== null && redisClient.status === "ready";
 }
 
 /**
@@ -258,30 +338,62 @@ export interface EncryptionConfig {
 
 /**
  * Get encryption configuration for organization
- * Matches C# GetEncryptionConfig method (VerifyController.cs lines 57-82)
- * 
- * Priority (same as C#):
- * 1. Redis cache (production) - CacheLoader:{env}:ScanItemActions:{org}
- * 2. Environment variables (development fallback)
- * 3. Fake keys (testing only - not implemented in Next.js)
- * 
+ *
+ * STRICT MODE ENFORCEMENT:
+ * - SERVER mode (REDIS_HOST set): Get keys from Redis ONLY - NO fallback to env vars
+ * - LOCAL mode (no REDIS_HOST): Get keys from env vars ONLY - NO Redis
+ *
+ * This prevents configuration mistakes and matches C# behavior exactly.
+ *
  * @param org - Organization identifier (e.g., 'napbiotec')
  * @returns Encryption configuration or null if not found
+ * @throws Error if configuration is invalid for current mode
  */
-export async function getEncryptionConfig(org: string): Promise<EncryptionConfig | null> {
-  const redis = getRedisClient();
+export async function getEncryptionConfig(
+  org: string,
+): Promise<EncryptionConfig | null> {
+  const mode = getDeploymentMode();
 
-  // Case 1: No Redis configured - use environment variable fallback (development)
-  // Matches C# VerifyController.cs lines 59-66: if (_redis == null)
-  if (redis === null) {
-    console.log('Redis not configured, using environment variable fallback');
+  console.log(`🔐 Getting encryption config for org: ${org} [MODE: ${mode}]`);
+
+  // ========================================
+  // LOCAL MODE: Use environment variables ONLY
+  // ========================================
+  if (mode === DeploymentMode.LOCAL) {
+    console.log("📍 LOCAL mode: Using environment variables");
+
     const key = process.env.ENCRYPTION_KEY;
     const iv = process.env.ENCRYPTION_IV;
 
     if (!key || !iv) {
-      console.error('ENCRYPTION_KEY or ENCRYPTION_IV not set in environment');
+      console.error(
+        "❌ LOCAL mode ERROR: ENCRYPTION_KEY or ENCRYPTION_IV not set",
+      );
+      console.error("   Required environment variables:");
+      console.error("   - ENCRYPTION_KEY (16, 24, or 32 characters)");
+      console.error("   - ENCRYPTION_IV (16 characters)");
       return null;
     }
+
+    // Validate key and IV lengths
+    if (![16, 24, 32].includes(key.length)) {
+      console.error(
+        `❌ LOCAL mode ERROR: ENCRYPTION_KEY length must be 16, 24, or 32 (got ${key.length})`,
+      );
+      return null;
+    }
+
+    if (iv.length !== 16) {
+      console.error(
+        `❌ LOCAL mode ERROR: ENCRYPTION_IV length must be 16 (got ${iv.length})`,
+      );
+      return null;
+    }
+
+    console.log(
+      `✅ LOCAL mode: Successfully loaded encryption config from environment`,
+    );
+    console.log(`   Key length: ${key.length}, IV length: ${iv.length}`);
 
     return {
       Encryption_Key: key,
@@ -289,100 +401,138 @@ export async function getEncryptionConfig(org: string): Promise<EncryptionConfig
     };
   }
 
-  // Case 2: Redis configured - fetch from cache (production)
-  // Matches C# VerifyController.cs lines 68-80
-  try {
-    // Normalize environment name to match C# convention
-    // C# uses: ASPNETCORE_ENVIRONMENT (Development, Production, Staging)
-    // We use: RUNTIME_ENV (Kubernetes deployment) - explicit environment name
-    // Priority: RUNTIME_ENV (Kubernetes) > NODE_ENV (Next.js default) > 'development' (fallback)
-    const runtimeEnv = process.env.RUNTIME_ENV || 'development';
-    console.log(`@@@@ P'James debug runtimeEnv: [${runtimeEnv}] [RUNTIME_ENV: ${process.env.RUNTIME_ENV}]`);
-    
+  // ========================================
+  // SERVER MODE: Use Redis ONLY - NO fallback
+  // ========================================
+  console.log("📍 SERVER mode: Using Redis (NO env var fallback)");
 
-    const env = runtimeEnv === 'production' ? 'Production' : 
-                runtimeEnv === 'test' ? 'Test' : 
-                'Development';
+  const redis = getRedisClient();
+
+  if (!redis) {
+    console.error("❌ SERVER mode ERROR: Redis client not available");
+    console.error("   REDIS_HOST is set but Redis connection failed");
+    console.error(
+      "   Check REDIS_HOST, REDIS_PORT, REDIS_PASSWORD configuration",
+    );
+    return null;
+  }
+
+  try {
+    // Determine environment name for Redis key
+    // Priority: RUNTIME_ENV > NODE_ENV > 'Development' (fallback)
+    const runtimeEnv =
+      process.env.RUNTIME_ENV || process.env.NODE_ENV || "development";
+    const env =
+      runtimeEnv === "production"
+        ? "Production"
+        : runtimeEnv === "test"
+          ? "Test"
+          : "Development";
 
     // Build cache key matching C# pattern: CacheLoader:{env}:ScanItemActions:{org}
     const cacheKey = `CacheLoader:${env}:ScanItemActions:${org}`;
-    console.log(`Fetching encryption config from Redis: ${cacheKey}`);
+    console.log(`   Redis key: ${cacheKey}`);
 
     const configJson = await getAsync(cacheKey);
 
     if (!configJson) {
-      console.warn(`Encryption config not found in Redis for key: ${cacheKey}`);
-      
-      // Fallback to environment variables if Redis key not found
-      const key = process.env.ENCRYPTION_KEY;
-      const iv = process.env.ENCRYPTION_IV;
-
-      if (!key || !iv) {
-        console.error('Fallback failed: ENCRYPTION_KEY or ENCRYPTION_IV not set');
-        return null;
-      }
-
-      console.log('Using environment variable fallback');
-      return {
-        Encryption_Key: key,
-        Encryption_Iv: iv,
-      };
+      console.error(
+        `❌ SERVER mode ERROR: Encryption config not found in Redis`,
+      );
+      console.error(`   Key: ${cacheKey}`);
+      console.error(`   Organization: ${org}`);
+      console.error(`   Environment: ${env}`);
+      console.error(`   `);
+      console.error(`   ACTION REQUIRED:`);
+      console.error(`   Populate Redis with encryption keys using:`);
+      console.error(
+        `   redis-cli SET "${cacheKey}" '{"Encryption_Key":"your-key","Encryption_Iv":"your-iv"}'`,
+      );
+      console.error(`   `);
+      console.error(
+        `   ⚠️  NO FALLBACK TO ENVIRONMENT VARIABLES IN SERVER MODE`,
+      );
+      return null;
     }
 
     // Parse Redis response
     const rawConfig: any = JSON.parse(configJson);
-    console.log('✓ Successfully fetched encryption config from Redis');
-    console.log('Raw config from Redis:', rawConfig);
-    
+    console.log("✓ Redis config fetched successfully");
+
     // Support both naming conventions:
     // 1. PascalCase: Encryption_Key, Encryption_Iv (C# convention)
     // 2. lowercase: encryption_key, encryption_iv (common convention)
     const config: EncryptionConfig = {
-      Encryption_Key: rawConfig.Encryption_Key || rawConfig.encryption_key || '',
-      Encryption_Iv: rawConfig.Encryption_Iv || rawConfig.encryption_iv || '',
+      Encryption_Key:
+        rawConfig.Encryption_Key || rawConfig.encryption_key || "",
+      Encryption_Iv: rawConfig.Encryption_Iv || rawConfig.encryption_iv || "",
     };
 
     // Validate we got the keys
     if (!config.Encryption_Key || !config.Encryption_Iv) {
-      console.error('Invalid encryption config from Redis. Missing key or IV.');
-      console.error('Expected: Encryption_Key/encryption_key and Encryption_Iv/encryption_iv');
-      console.error('Got:', rawConfig);
-      
-      // Fallback to environment variables
-      const key = process.env.ENCRYPTION_KEY;
-      const iv = process.env.ENCRYPTION_IV;
-
-      if (!key || !iv) {
-        console.error('Fallback failed: ENCRYPTION_KEY or ENCRYPTION_IV not set');
-        return null;
-      }
-
-      console.log('Using environment variable fallback');
-      return {
-        Encryption_Key: key,
-        Encryption_Iv: iv,
-      };
-    }
-    
-    return config;
-
-  } catch (error) {
-    console.error('Error fetching encryption config from Redis:', error);
-    
-    // Fallback to environment variables on error
-    console.log('Redis error, falling back to environment variables');
-    const key = process.env.ENCRYPTION_KEY;
-    const iv = process.env.ENCRYPTION_IV;
-
-    if (!key || !iv) {
-      console.error('Fallback failed: ENCRYPTION_KEY or ENCRYPTION_IV not set');
+      console.error(
+        "❌ SERVER mode ERROR: Invalid encryption config from Redis",
+      );
+      console.error(
+        "   Expected fields: Encryption_Key, Encryption_Iv (or lowercase)",
+      );
+      console.error("   Got:", rawConfig);
+      console.error(`   `);
+      console.error(`   ACTION REQUIRED:`);
+      console.error(`   Update Redis value to include both fields:`);
+      console.error(
+        `   redis-cli SET "${cacheKey}" '{"Encryption_Key":"your-key","Encryption_Iv":"your-iv"}'`,
+      );
+      console.error(`   `);
+      console.error(
+        `   ⚠️  NO FALLBACK TO ENVIRONMENT VARIABLES IN SERVER MODE`,
+      );
       return null;
     }
 
-    return {
-      Encryption_Key: key,
-      Encryption_Iv: iv,
-    };
+    // Validate key and IV lengths
+    if (![16, 24, 32].includes(config.Encryption_Key.length)) {
+      console.error(
+        `❌ SERVER mode ERROR: Encryption_Key length must be 16, 24, or 32 (got ${config.Encryption_Key.length})`,
+      );
+      console.error(`   Update Redis value with correct key length`);
+      return null;
+    }
+
+    if (config.Encryption_Iv.length !== 16) {
+      console.error(
+        `❌ SERVER mode ERROR: Encryption_Iv length must be 16 (got ${config.Encryption_Iv.length})`,
+      );
+      console.error(`   Update Redis value with correct IV length`);
+      return null;
+    }
+
+    console.log(
+      `✅ SERVER mode: Successfully loaded encryption config from Redis`,
+    );
+    console.log(
+      `   Key length: ${config.Encryption_Key.length}, IV length: ${config.Encryption_Iv.length}`,
+    );
+
+    return config;
+  } catch (error) {
+    console.error(
+      "❌ SERVER mode ERROR: Failed to fetch encryption config from Redis",
+    );
+    console.error(
+      "   Error:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
+    console.error(`   `);
+    console.error(`   ⚠️  NO FALLBACK TO ENVIRONMENT VARIABLES IN SERVER MODE`);
+    console.error(`   `);
+    console.error(`   Troubleshooting:`);
+    console.error(`   1. Verify Redis is accessible`);
+    console.error(
+      `   2. Check Redis credentials (REDIS_HOST, REDIS_PORT, REDIS_PASSWORD)`,
+    );
+    console.error(`   3. Ensure encryption keys exist in Redis`);
+    return null;
   }
 }
 
@@ -398,4 +548,6 @@ export default {
   closeRedisConnection,
   isRedisAvailable,
   getEncryptionConfig,
+  getDeploymentMode,
+  validateConfiguration,
 };
