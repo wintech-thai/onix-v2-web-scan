@@ -351,6 +351,7 @@ export interface EncryptionConfig {
  */
 export async function getEncryptionConfig(
   org: string,
+  actionId?: string,
 ): Promise<EncryptionConfig | null> {
   const mode = getDeploymentMode();
 
@@ -430,8 +431,11 @@ export async function getEncryptionConfig(
           : "Development";
 
     // Build cache key matching C# pattern: CacheLoader:{env}:ScanItemActions:{org}
-    const cacheKey = `CacheLoader:${env}:ScanItemActions:${org}`;
-    console.log(`   Redis key: ${cacheKey}`);
+    let cacheKey = `CacheLoader:${env}:ScanItemActions:${org}`;
+    if (actionId) {
+      cacheKey = `CacheLoader:${env}:ScanItemActions:${org}:${actionId}`;
+    }
+    console.log(`   Redis key: ${cacheKey}, action_id=[${actionId}]`);
 
     const configJson = await getAsync(cacheKey);
 

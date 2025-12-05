@@ -108,6 +108,7 @@ interface VerifyPageProps {
     data?: string;
     theme?: string;
     org?: string;
+    action?: string;
     lang?: "th" | "en";
   }>;
 }
@@ -267,6 +268,7 @@ async function fetchProductData(
 async function verifyDataDirect(
   org: string,
   data: string,
+  actionId?: string,
   theme?: string,
 ): Promise<VerifyPayload | null> {
   try {
@@ -291,7 +293,7 @@ async function verifyDataDirect(
 
     // Get encryption credentials from Redis (SERVER mode) or environment (LOCAL mode)
     // STRICT MODE: No fallbacks between modes
-    const encryptionConfig = await getEncryptionConfig(org);
+    const encryptionConfig = await getEncryptionConfig(org, actionId);
 
     if (
       !encryptionConfig ||
@@ -606,13 +608,14 @@ function buildTtlDisplay(
  */
 export default async function VerifyPage({ searchParams }: VerifyPageProps) {
   const params = await searchParams;
-  const { data, theme, org, lang = "th" } = params;
+  const { data, theme, org, lang = "th", action } = params;
 
   // Construct current URL for language switching (without lang param)
   const urlParams = new URLSearchParams();
   if (data) urlParams.set("data", data);
   if (theme) urlParams.set("theme", theme);
   if (org) urlParams.set("org", org);
+  if (action) urlParams.set("action", action);
   const baseUrl = `/verify${urlParams.toString() ? "?" + urlParams.toString() : ""}`;
 
   // Validate theme (matching C# whitelist check)
@@ -710,7 +713,7 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
   }
 
   // Call verify logic directly (optimized - no HTTP overhead)
-  const verifyResult = await verifyDataDirect(org, data, selectedTheme);
+  const verifyResult = await verifyDataDirect(org, data, action, selectedTheme);
 
   if (!verifyResult) {
     return (
