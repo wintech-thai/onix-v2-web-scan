@@ -108,7 +108,7 @@ interface VerifyPageProps {
     data?: string;
     theme?: string;
     org?: string;
-    action_id?: string;
+    action?: string;
     lang?: "th" | "en";
   }>;
 }
@@ -608,14 +608,14 @@ function buildTtlDisplay(
  */
 export default async function VerifyPage({ searchParams }: VerifyPageProps) {
   const params = await searchParams;
-  const { data, theme, org, lang = "th", action_id } = params;
+  const { data, theme, org, lang = "th", action } = params;
 
   // Construct current URL for language switching (without lang param)
   const urlParams = new URLSearchParams();
   if (data) urlParams.set("data", data);
   if (theme) urlParams.set("theme", theme);
   if (org) urlParams.set("org", org);
-  if (action_id) urlParams.set("action_id", action_id);
+  if (action) urlParams.set("action", action);
   const baseUrl = `/verify${urlParams.toString() ? "?" + urlParams.toString() : ""}`;
 
   // Validate theme (matching C# whitelist check)
@@ -713,7 +713,7 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
   }
 
   // Call verify logic directly (optimized - no HTTP overhead)
-  const verifyResult = await verifyDataDirect(org, data, action_id, selectedTheme);
+  const verifyResult = await verifyDataDirect(org, data, action, selectedTheme);
 
   if (!verifyResult) {
     return (
