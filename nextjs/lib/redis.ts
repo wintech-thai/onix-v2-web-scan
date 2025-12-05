@@ -435,7 +435,7 @@ export async function getEncryptionConfig(
     if (actionId) {
       cacheKey = `CacheLoader:${env}:ScanItemActions:${org}:${actionId}`;
     }
-    console.log(`   Redis key: ${cacheKey}`);
+    console.log(`   Redis key: ${cacheKey}, action_id=[${actionId}]`);
 
     const configJson = await getAsync(cacheKey);
 
