@@ -30,7 +30,6 @@ import VerifyViewMinimal from "@/components/themes/minimal/VerifyView";
 import VerifyViewModern from "@/components/themes/modern/VerifyView";
 import VerifyViewEagle from "@/components/themes/eagle/VerifyView";
 import HamburgerMenu from "@/components/HamburgerMenu";
-import HamburgerMenuEagle from "@/components/HamburgerEagleMenu";
 import Link from "next/link";
 
 // Import the verify API logic directly to avoid HTTP fetch overhead
