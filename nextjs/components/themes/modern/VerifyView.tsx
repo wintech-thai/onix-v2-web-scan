@@ -10,10 +10,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 // --- MODERN THEME CONFIGURATION ---
 const MODERN_THEME = {
-  primary: "#2563eb", // Blue-600
-  success: "#10b981", // Emerald-500
-  warning: "#f59e0b", // Amber-500
-  error: "#ef4444", // Red-500
+  primary: "#2563eb", 
+  success: "#10b981", 
+  warning: "#f59e0b", 
+  error: "#ef4444", 
 };
 
 interface VerifyViewProps {
