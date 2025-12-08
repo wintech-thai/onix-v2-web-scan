@@ -19,7 +19,7 @@ interface VerifyViewProps {
   verifyData: VerifyViewModel;
 }
 
-// 🟢 Helper: Minimal Social Link (Simple Icon, No Background)
+// 🟢 Helper: Minimal Social Link
 const SocialLink = ({ href, icon, label }: any) => (
   <a
     href={href}
@@ -33,7 +33,7 @@ const SocialLink = ({ href, icon, label }: any) => (
 );
 
 export default function VerifyViewMinimal({ verifyData }: VerifyViewProps) {
-  // --- STATE & LOGIC (เหมือนเดิม 100%) ---
+  // --- STATE & LOGIC ---
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [productData, setProductData] = useState<ProductApiResponse | null>(
@@ -97,7 +97,7 @@ export default function VerifyViewMinimal({ verifyData }: VerifyViewProps) {
   const statusMessages =
     t.messages[status as keyof typeof t.messages] || t.messages.UNKNOWN;
 
-  // --- UI ICONS (Minimal Style - Thin Lines) ---
+  // --- UI ICONS ---
   const statusIcon = isSuccess ? (
     <svg
       className="w-12 h-12 text-emerald-600"
@@ -342,7 +342,6 @@ export default function VerifyViewMinimal({ verifyData }: VerifyViewProps) {
         </div>
       </div>
 
-      {/* --- MODALS (Reused Logic, Minimal Style) --- */}
       {/* Product Details Modal */}
       {isModalOpen && (
         <div

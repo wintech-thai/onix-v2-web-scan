@@ -35,9 +35,7 @@ const SocialLink = ({ href, icon, colorClass, label }: any) => (
 );
 
 export default function VerifyViewModern({ verifyData }: VerifyViewProps) {
-  // ==========================================
-  // 1. LOGIC SECTION (KEPT EXACTLY THE SAME)
-  // ==========================================
+  // 1. LOGIC SECTION
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
