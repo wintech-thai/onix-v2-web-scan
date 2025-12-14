@@ -95,9 +95,7 @@ function transformUrls(response: BackendVerifyResponse): BackendVerifyResponse {
   return transformed;
 }
 
-// ============================================================================
 // API Route Handler
-// ============================================================================
 
 export async function POST(request: NextRequest) {
   try {

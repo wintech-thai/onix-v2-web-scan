@@ -7,7 +7,8 @@ WORKDIR /app
 # Install dependencies only when needed
 # Copy package files
 COPY nextjs/package.json nextjs/package-lock.json* ./
-RUN npm ci
+RUN npm install
+# RUN npm ci
 
 # -------------------------------
 # Stage 2: Builder

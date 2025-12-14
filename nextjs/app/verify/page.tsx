@@ -26,6 +26,9 @@ import type {
   ProductApiResponse,
 } from "@/lib/types";
 import VerifyView from "@/components/themes/default/VerifyView";
+import VerifyViewMinimal from "@/components/themes/minimal/VerifyView";
+import VerifyViewModern from "@/components/themes/modern/VerifyView";
+import VerifyViewEagle from "@/components/themes/eagle/VerifyView";
 import HamburgerMenu from "@/components/HamburgerMenu";
 import Link from "next/link";
 
@@ -116,7 +119,120 @@ interface VerifyPageProps {
 /**
  * Layout wrapper with header and footer (matching test page)
  */
-function PageLayout({
+function DefaultLayout({
+  children,
+  lang,
+  currentUrl,
+}: {
+  children: React.ReactNode;
+  lang: "th" | "en";
+  currentUrl: string;
+}) {
+  return (
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: "#f7f8fb" }}
+    >
+      {/* Header - Matching C# Layout */}
+      <header>
+        <nav
+          style={{
+            background: "#183153",
+            borderBottom: "1px solid #25406b",
+            boxShadow: "0 4px 14px rgba(24,49,83,0.08)",
+            padding: "1rem 0",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: "960px",
+              margin: "0 auto",
+              padding: "0 1rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Link
+              href="https://please-scan.com"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                fontWeight: 700,
+                letterSpacing: "0.2px",
+                color: "#f3f7fa",
+                textDecoration: "none",
+              }}
+            >
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "8px",
+                  background: "#2563eb",
+                  color: "#fff",
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  boxShadow: "0 2px 8px rgba(37,99,235,0.10)",
+                }}
+              >
+                PS
+              </span>
+              <span>Please Scan Verify</span>
+            </Link>
+
+            <HamburgerMenu lang={lang} currentUrl={currentUrl} />
+          </div>
+        </nav>
+      </header>
+
+      {/* Main Content Area - Centered like C# */}
+      <main role="main" className="flex-1 grid place-items-center py-8">
+        {children}
+      </main>
+
+      {/* Footer - Matching C# Layout */}
+      <footer
+        style={{
+          borderTop: "1px solid #25406b",
+          background: "#183153",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "960px",
+            margin: "0 auto",
+            padding: "14px 1rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            color: "#b6c6e3",
+            fontSize: "14px",
+          }}
+        >
+          <div>© {new Date().getFullYear()} Please Scan</div>
+          <div>
+            <Link
+              href="https://please-scan.com/privacy"
+              style={{
+                color: "#b6c6e3",
+                textDecoration: "none",
+                transition: "color 0.2s",
+              }}
+            >
+              นโยบายความเป็นส่วนตัว
+            </Link>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+function EagleLayout({
   children,
   lang,
   currentUrl,
@@ -230,9 +346,10 @@ function PageLayout({
   );
 }
 
+
 // Whitelist of allowed themes (matching C# controller)
 // Add new themes here as you create them in components/themes/{themeName}/
-const ALLOWED_THEMES = ["default", "modern", "minimal"];
+const ALLOWED_THEMES = ["default", "modern", "minimal","eagle"];
 
 /**
  * Fetch product data from external API (matching C# FetchProductData)
@@ -619,14 +736,46 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
   const baseUrl = `/verify${urlParams.toString() ? "?" + urlParams.toString() : ""}`;
 
   // Validate theme (matching C# whitelist check)
-  const selectedTheme =
-    theme && ALLOWED_THEMES.includes(theme) ? theme : "default";
+    const selectedTheme =
+      theme && ALLOWED_THEMES.includes(theme) ? theme : "default";
+      console.log("DEBUG: ALLOWED_THEMES =", ALLOWED_THEMES);
+      console.log(
+      "DEBUG: ALLOWED_THEMES.includes(theme) =",
+      theme ? ALLOWED_THEMES.includes(theme) : false
+    );
+    let LayoutComponent = DefaultLayout; // ตั้งค่าเริ่มต้นเป็น Layout เดิม
+
+    if (selectedTheme === "eagle") {
+      LayoutComponent = EagleLayout;   // ถ้าเป็น eagle ให้เปลี่ยนไปใช้ EagleLayout
+    }
+    switch (selectedTheme) {
+      case "eagle": LayoutComponent = EagleLayout; break;
+      // case "minimal": LayoutComponent = MinimalLayout; break; // ถ้าอยากแยกอีก
+      default: LayoutComponent = DefaultLayout;
+    }
+    
+    console.log("DEBUG: selectedTheme =", selectedTheme);
+    // ฟังก์ชันช่วยเลือก component ตาม theme
+      function getVerifyComponent(theme: string): React.ComponentType<any> {
+        switch (theme) {
+          case "minimal":
+            return VerifyViewMinimal
+          case "modern":
+            return VerifyViewModern
+          case "eagle":
+            return VerifyViewEagle
+          case "default":
+          default:
+            return VerifyView as React.ComponentType<any>;
+        }
+      }
+    const SelectedVerifyView = getVerifyComponent(selectedTheme);
 
   // Case 1: No query parameters at all (matching C# Case 1)
   if (!data && !theme && !org) {
     return (
-      <PageLayout lang={lang} currentUrl={baseUrl}>
-        <VerifyView
+      <LayoutComponent lang={lang} currentUrl={baseUrl}>
+        <SelectedVerifyView
           verifyData={{
             status: "PARAMETER_MISSING",
             message: "Query parameters are missing",
@@ -636,15 +785,15 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
             language: lang,
           }}
         />
-      </PageLayout>
+      </LayoutComponent>
     );
   }
 
   // Case 2: Missing 'data' parameter (matching C# Case 2)
   if (!data) {
     return (
-      <PageLayout lang={lang} currentUrl={baseUrl}>
-        <VerifyView
+      <LayoutComponent lang={lang} currentUrl={baseUrl}>
+        <SelectedVerifyView
           verifyData={{
             status: "PARAM_MISSING",
             message: "Data parameter is missing",
@@ -654,15 +803,15 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
             language: lang,
           }}
         />
-      </PageLayout>
+      </LayoutComponent>
     );
   }
 
   // Case 3: Empty data parameter (matching C# Case 3)
   if (data.trim() === "") {
     return (
-      <PageLayout lang={lang} currentUrl={baseUrl}>
-        <VerifyView
+      <LayoutComponent lang={lang} currentUrl={baseUrl}>
+        <SelectedVerifyView
           verifyData={{
             status: "NO_DATA",
             message: "Data parameter is empty",
@@ -672,15 +821,15 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
             language: lang,
           }}
         />
-      </PageLayout>
+      </LayoutComponent>
     );
   }
 
   // Case 4: Missing theme parameter (matching C# Case - missing theme)
   if (!theme || theme.trim() === "") {
     return (
-      <PageLayout lang={lang} currentUrl={baseUrl}>
-        <VerifyView
+      <LayoutComponent lang={lang} currentUrl={baseUrl}>
+        <SelectedVerifyView
           verifyData={{
             status: "MISSING_THEME",
             message: "Theme parameter is missing",
@@ -690,15 +839,15 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
             language: lang,
           }}
         />
-      </PageLayout>
+      </LayoutComponent>
     );
   }
 
   // Case 5: Missing org parameter (matching C# Case - missing org)
   if (!org || org.trim() === "") {
     return (
-      <PageLayout lang={lang} currentUrl={baseUrl}>
-        <VerifyView
+      <LayoutComponent lang={lang} currentUrl={baseUrl}>
+        <SelectedVerifyView
           verifyData={{
             status: "MISSING_ORG",
             message: "Organization parameter is missing",
@@ -708,7 +857,7 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
             language: lang,
           }}
         />
-      </PageLayout>
+      </LayoutComponent>
     );
   }
 
@@ -717,8 +866,8 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
 
   if (!verifyResult) {
     return (
-      <PageLayout lang={lang} currentUrl={baseUrl}>
-        <VerifyView
+      <LayoutComponent lang={lang} currentUrl={baseUrl}>
+        <SelectedVerifyView
           verifyData={{
             status: "FAILED",
             message: "Failed to verify data with backend",
@@ -728,7 +877,7 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
             language: lang,
           }}
         />
-      </PageLayout>
+      </LayoutComponent>
     );
   }
 
@@ -768,8 +917,8 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
 
   // Build VerifyViewModel with ALL backend URLs (proxied)
   return (
-    <PageLayout lang={lang} currentUrl={baseUrl}>
-      <VerifyView
+    <LayoutComponent lang={lang} currentUrl={baseUrl}>
+      <SelectedVerifyView
         verifyData={{
           status: verifyResult.status || "UNKNOWN",
           message:
@@ -794,6 +943,6 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
           getProductUrl: verifyResult.getProductUrl,
         }}
       />
-    </PageLayout>
+    </LayoutComponent>
   );
 }
