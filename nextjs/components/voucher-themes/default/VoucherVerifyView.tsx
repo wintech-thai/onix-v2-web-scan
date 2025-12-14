@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-// Interface
 interface VoucherApiResponse {
   Status: string;
   Description?: string;
@@ -13,15 +12,23 @@ interface VoucherApiResponse {
   voucherNo?: string;
   Pin?: string;
   pin?: string;
+
+  // Privilege Info
   PrivilegeName?: string;
   privilegeName?: string;
+  privilege_name?: string;
   CampaignName?: string;
   PrivilegeCode?: string;
   privilegeCode?: string;
+  privilege_code?: string;
+
+  // Dates (Start)
   StartDate?: string;
   startDate?: string;
   start_date?: string;
   EffectiveDate?: string;
+
+  // Dates (End)
   ExpiryDate?: string;
   expiryDate?: string;
   expiry_date?: string;
@@ -32,13 +39,17 @@ interface VoucherApiResponse {
   ValidUntil?: string;
   valid_until?: string;
   ValidTo?: string;
+
   [key: string]: any;
 }
 
+// API Base URL
 const API_BASE_URL = "/api/voucher";
 
 export default function VoucherVerifyView() {
   const searchParams = useSearchParams();
+
+  // -- Query Params --
   const org = searchParams.get("org") || "";
   const dataParam = searchParams.get("data");
   const lang = (searchParams.get("lang") || "th") as "th" | "en";
@@ -78,7 +89,7 @@ export default function VoucherVerifyView() {
       errorTitle: "ทำรายการไม่สำเร็จ",
       errorMsg: "ไม่สามารถบันทึกการใช้งานได้",
       tryAgain: "ลองใหม่อีกครั้ง",
-      errorDefault: "ทำรายการไม่สำเร็จ",
+      errorDefault: "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ",
     },
     en: {
       title: "Verify Voucher",
@@ -113,7 +124,7 @@ export default function VoucherVerifyView() {
       errorTitle: "Transaction Failed",
       errorMsg: "Unable to record usage",
       tryAgain: "Try Again",
-      errorDefault: "Transaction failed",
+      errorDefault: "An unknown error occurred",
     },
   };
 
@@ -128,6 +139,7 @@ export default function VoucherVerifyView() {
   const [voucherNo, setVoucherNo] = useState("");
   const [pin, setPin] = useState("");
   const [barcode, setBarcode] = useState("");
+
   const [initialData, setInitialData] = useState<any>({});
 
   const barcodeInputRef = useRef<HTMLInputElement>(null);
@@ -136,7 +148,6 @@ export default function VoucherVerifyView() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   const [approveError, setApproveError] = useState<string>("");
 
   const getDisplayVal = (apiKeys: string[], fallbackState: string = "") => {
@@ -215,6 +226,8 @@ export default function VoucherVerifyView() {
         throw new Error(errRes.Description || `HTTP Error: ${response.status}`);
       }
       const apiData: VoucherApiResponse = await response.json();
+
+      // Check for success or active status
       if (apiData.Status === "OK" || apiData.Status === "Active") {
         const mergedData = { ...initialData, ...apiData };
         setVerifiedData(mergedData);
@@ -257,8 +270,8 @@ export default function VoucherVerifyView() {
       }
 
       const data = await response.json();
-      console.log("Approve Response:", data);
 
+      // Update state with latest data from API
       if (data) {
         setVerifiedData((prev) => ({ ...prev, ...initialData, ...data }));
       }
@@ -535,7 +548,10 @@ export default function VoucherVerifyView() {
                             : "bg-gray-100 text-gray-700 border-gray-200"
                         }`}
                       >
-                        {verifiedData.Status || "Unknown"}
+                        {/* ✅ Change Logic Here: if OK show Active, else show original status */}
+                        {verifiedData.Status === "OK"
+                          ? "Active"
+                          : verifiedData.Status || "Unknown"}
                       </span>
                     </div>
                   </div>

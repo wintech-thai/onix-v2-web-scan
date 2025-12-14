@@ -11,7 +11,10 @@
 
 import React, { Suspense } from "react";
 import Link from "next/link";
-import VoucherVerifyView from "@/components/voucher-themes/default/VoucherView";
+import VoucherVerifyView from "@/components/voucher-themes/default/VoucherVerifyView";
+import VoucherModernVerifyView from "@/components/voucher-themes/modern/VoucherVerifyView";
+import VoucherMinimalVerifyView from "@/components/voucher-themes/minimal/VoucherVerifyView";
+import VoucherEagleVerifyView from "@/components/voucher-themes/eagle/VoucherVerifyView";
 import HamburgerMenu from "@/components/HamburgerMenuVoucher/HamburgerMenu";
 
 
@@ -24,11 +27,11 @@ function getVoucherVerifyComponent(theme: string): React.ComponentType<any> {
   console.log(`[ThemeFactory] Selecting component for theme: ${theme}`);
   switch (theme) {
     case "minimal":
-      return VoucherVerifyView;
+      return VoucherMinimalVerifyView;
     case "modern":
-      return VoucherVerifyView;
+      return VoucherModernVerifyView;
     case "eagle":
-      return VoucherVerifyView;
+      return VoucherEagleVerifyView;
     case "default":
     default:
       return VoucherVerifyView;
