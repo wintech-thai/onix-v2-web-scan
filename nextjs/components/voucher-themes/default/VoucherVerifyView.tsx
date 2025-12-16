@@ -3,6 +3,53 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+// --- Icons (SVG Components) ---
+const IconVoucher = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.5}
+      d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
+    />
+  </svg>
+);
+const IconPin = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.5}
+      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+    />
+  </svg>
+);
+const IconBarcode = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.5}
+      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+    />
+  </svg>
+);
+
 interface VoucherApiResponse {
   Status: string;
   Description?: string;
@@ -12,8 +59,6 @@ interface VoucherApiResponse {
   voucherNo?: string;
   Pin?: string;
   pin?: string;
-
-  // Privilege Info
   PrivilegeName?: string;
   privilegeName?: string;
   privilege_name?: string;
@@ -21,14 +66,10 @@ interface VoucherApiResponse {
   PrivilegeCode?: string;
   privilegeCode?: string;
   privilege_code?: string;
-
-  // Dates (Start)
   StartDate?: string;
   startDate?: string;
   start_date?: string;
   EffectiveDate?: string;
-
-  // Dates (End)
   ExpiryDate?: string;
   expiryDate?: string;
   expiry_date?: string;
@@ -39,41 +80,37 @@ interface VoucherApiResponse {
   ValidUntil?: string;
   valid_until?: string;
   ValidTo?: string;
-
   [key: string]: any;
 }
 
-// API Base URL
 const API_BASE_URL = "/api/voucher";
 
 export default function VoucherVerifyView() {
   const searchParams = useSearchParams();
 
-  // -- Query Params --
   const org = searchParams.get("org") || "";
   const dataParam = searchParams.get("data");
   const lang = (searchParams.get("lang") || "th") as "th" | "en";
 
-  // -- Translations --
   const t = {
     th: {
       title: "ตรวจสอบ Voucher",
-      subtitle: "ตรวจสอบและอนุมัติการใช้งาน",
+      subtitle: "ระบบตรวจสอบและอนุมัติสิทธิ์",
       useVoucher: "ใช้เลข Voucher",
       useBarcode: "ใช้ Barcode",
       voucherNoLabel: "หมายเลข Voucher",
-      pinLabel: "หมายเลข Pin",
-      barcodeLabel: "หมายเลข Barcode",
-      voucherPlaceholder: "Ex. V-123456",
+      pinLabel: "รหัส PIN",
+      barcodeLabel: "รหัสบาร์โค้ด",
+      voucherPlaceholder: "ระบุ V-XXXXXX",
       pinPlaceholder: "XXXX",
-      barcodePlaceholder: "Scan or type barcode...",
-      checking: "Checking...",
-      verify: "ตรวจสอบข้อมูล (Verify)",
-      clear: "ล้างข้อมูล (Clear)",
-      errorVoucherPin: "กรุณากรอก Voucher No. และ PIN",
-      errorBarcode: "กรุณากรอก Barcode",
+      barcodePlaceholder: "สแกนหรือพิมพ์รหัส...",
+      checking: "กำลังตรวจสอบ...",
+      verify: "ตรวจสอบข้อมูล",
+      clear: "ล้างข้อมูล",
+      errorVoucherPin: "กรุณาระบุ Voucher No. และ PIN",
+      errorBarcode: "กรุณาระบุ Barcode",
       errorNotFound: "ไม่พบข้อมูล Voucher หรือข้อมูลไม่ถูกต้อง",
-      errorConnection: "เกิดข้อผิดพลาดในการเชื่อมต่อ",
+      errorConnection: "การเชื่อมต่อขัดข้อง",
       voucherNo: "Voucher No:",
       pin: "PIN:",
       startDate: "Start Date:",
@@ -81,34 +118,36 @@ export default function VoucherVerifyView() {
       status: "Status:",
       barcode: "Barcode",
       privilege: "Privilege:",
-      cancel: "Cancel",
-      approve: "Approve",
-      processing: "Processing...",
-      successTitle: "ใช้งานสำเร็จ!",
+      qrCode: "QR Code",
+      cancel: "ยกเลิก",
+      approve: "อนุมัติสิทธิ์",
+      processing: "กำลังบันทึก...",
+      successTitle: "ดำเนินการสำเร็จ",
       successMsg: "บันทึกการใช้งาน Voucher เรียบร้อยแล้ว",
       errorTitle: "ทำรายการไม่สำเร็จ",
       errorMsg: "ไม่สามารถบันทึกการใช้งานได้",
       tryAgain: "ลองใหม่อีกครั้ง",
       errorDefault: "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ",
+      backToHome: "กลับไปหน้าแรก",
     },
     en: {
       title: "Verify Voucher",
-      subtitle: "Verify and approve voucher usage",
-      useVoucher: "Use Voucher Number",
-      useBarcode: "Use Barcode",
+      subtitle: "Verification & Approval System",
+      useVoucher: "Voucher No.",
+      useBarcode: "Barcode",
       voucherNoLabel: "Voucher Number",
-      pinLabel: "PIN Number",
+      pinLabel: "PIN Code",
       barcodeLabel: "Barcode Number",
-      voucherPlaceholder: "Ex. V-123456",
+      voucherPlaceholder: "Enter V-XXXXXX",
       pinPlaceholder: "XXXX",
-      barcodePlaceholder: "Scan or type barcode...",
-      checking: "Checking...",
-      verify: "Verify",
-      clear: "Clear",
+      barcodePlaceholder: "Scan or type code...",
+      checking: "Verifying...",
+      verify: "Verify Now",
+      clear: "Clear Data",
       errorVoucherPin: "Please enter Voucher No. and PIN",
       errorBarcode: "Please enter Barcode",
       errorNotFound: "Voucher not found or invalid data",
-      errorConnection: "Connection error occurred",
+      errorConnection: "Connection error",
       voucherNo: "Voucher No:",
       pin: "PIN:",
       startDate: "Start Date:",
@@ -116,15 +155,17 @@ export default function VoucherVerifyView() {
       status: "Status:",
       barcode: "Barcode",
       privilege: "Privilege:",
+      qrCode: "QR Code",
       cancel: "Cancel",
       approve: "Approve",
       processing: "Processing...",
-      successTitle: "Success!",
+      successTitle: "Success",
       successMsg: "Voucher usage recorded successfully",
       errorTitle: "Transaction Failed",
       errorMsg: "Unable to record usage",
       tryAgain: "Try Again",
       errorDefault: "An unknown error occurred",
+      backToHome: "Back to Home",
     },
   };
 
@@ -135,13 +176,10 @@ export default function VoucherVerifyView() {
     "INPUT"
   );
   const [mode, setMode] = useState<"PIN" | "BARCODE">("PIN");
-
   const [voucherNo, setVoucherNo] = useState("");
   const [pin, setPin] = useState("");
   const [barcode, setBarcode] = useState("");
-
   const [initialData, setInitialData] = useState<any>({});
-
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const [verifiedData, setVerifiedData] = useState<VoucherApiResponse | null>(
     null
@@ -162,6 +200,22 @@ export default function VoucherVerifyView() {
       }
     }
     return fallbackState || "-";
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString || dateString === "-") return "-";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      return new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Bangkok",
+      }).format(date);
+    } catch (e) {
+      return dateString;
+    }
   };
 
   useEffect(() => {
@@ -195,7 +249,7 @@ export default function VoucherVerifyView() {
         particleCount: 150,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ["#26cc2b", "#2563eb", "#facc15"],
+        colors: ["#004C54", "#14b8a6", "#fbbf24"],
       });
     });
   };
@@ -216,21 +270,31 @@ export default function VoucherVerifyView() {
         if (!barcode) throw new Error(text.errorBarcode);
         payload.barcode = barcode;
       }
+
       const response = await fetch(API_BASE_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       if (!response.ok) {
         const errRes = await response.json();
         throw new Error(errRes.Description || `HTTP Error: ${response.status}`);
       }
+
       const apiData: VoucherApiResponse = await response.json();
 
-      // Check for success or active status
-      if (apiData.Status === "OK" || apiData.Status === "Active") {
-        const mergedData = { ...initialData, ...apiData };
-        setVerifiedData(mergedData);
+      // Check status from Verify API (handles Active, Redeemed, etc.)
+      if (
+        apiData.Id ||
+        apiData.id ||
+        apiData.VoucherNo ||
+        apiData.voucherNo ||
+        apiData.Status === "OK" ||
+        apiData.Status === "Active" ||
+        apiData.Status === "Redeemed"
+      ) {
+        setVerifiedData({ ...initialData, ...apiData });
         setStep("VERIFIED");
       } else {
         setErrorMsg(apiData.Description || text.errorNotFound);
@@ -245,12 +309,18 @@ export default function VoucherVerifyView() {
 
   const handleApprove = async () => {
     if (!verifiedData) return;
-    const vId = getDisplayVal(["Id", "id", "voucherId", "voucher_id"], "");
+    const vId = getDisplayVal(["Id", "id", "VoucherId", "voucherId"], "");
     const vPin = getDisplayVal(["Pin", "pin"], pin);
-    if (!vId) console.warn("Warning: Missing Voucher ID");
+
+    if (!vId || vId === "-" || vId === "") {
+      setApproveError(
+        "เกิดข้อผิดพลาดของระบบ: ไม่พบข้อมูล Voucher ID (Missing ID)"
+      );
+      setStep("ERROR");
+      return;
+    }
 
     setIsLoading(true);
-
     try {
       const payload = {
         action: "APPROVE",
@@ -264,26 +334,45 @@ export default function VoucherVerifyView() {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const errRes = await response.json();
-        throw new Error(errRes.Description || `HTTP Error: ${response.status}`);
-      }
-
       const data = await response.json();
 
-      // Update state with latest data from API
-      if (data) {
-        setVerifiedData((prev) => ({ ...prev, ...initialData, ...data }));
+      //ดักจับกรณี "already used"
+      const desc = (data.Description || "").toLowerCase();
+      if (desc.includes("already used")) {
+        setVerifiedData((prev) => ({
+          ...prev,
+          Status: "Redeemed",
+        }));
+
+
+        setApproveError(data.Description); 
+        setStep("ERROR"); 
+
+        setIsLoading(false);
+        return;
+      }
+
+      if (!response.ok) {
+        setApproveError(data.Description || `HTTP Error: ${response.status}`);
+        setStep("ERROR");
+        return;
       }
 
       const statusUpper = (data.Status || "").toUpperCase();
-
       if (
         statusUpper === "OK" ||
         statusUpper === "SUCCESS" ||
         statusUpper === "ACTIVE"
       ) {
         triggerConfetti();
+
+        setVerifiedData((prev) => ({
+          ...prev,
+          ...initialData,
+          ...data,
+          Status: "Redeemed",
+        }));
+
         setStep("APPROVED");
       } else {
         setApproveError(data.Description || data.Status || text.errorDefault);
@@ -305,21 +394,39 @@ export default function VoucherVerifyView() {
     setPin("");
     setBarcode("");
     setErrorMsg(null);
-  };
-
-  const handleTryAgain = () => {
-    setStep("VERIFIED");
     setApproveError("");
   };
 
-  const handleClearBarcode = () => {
+  const handleClear = () => {
+    setVoucherNo("");
+    setPin("");
     setBarcode("");
     setErrorMsg(null);
-    if (barcodeInputRef.current) barcodeInputRef.current.focus();
+    if (mode === "BARCODE" && barcodeInputRef.current)
+      barcodeInputRef.current.focus();
   };
 
-  const primaryGradient = "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)";
-  const primaryShadow = "rgba(37, 99, 235, 0.3)";
+  const handleTryAgain = () => {
+    setApproveError("");
+    if (
+      !verifiedData ||
+      !verifiedData.VoucherNo ||
+      verifiedData.Status === "ERROR"
+    ) {
+      handleVerify();
+    } else {
+      setStep("VERIFIED");
+    }
+  };
+
+  const eaglePrimary = "#004C54";
+  const eagleGradient = "linear-gradient(135deg, #004C54 0%, #046A74 100%)";
+  const eagleShadow = "rgba(0, 76, 84, 0.4)";
+
+  const getContainerClass = () => {
+    if (step === "INPUT") return "w-full max-w-sm md:max-w-5xl";
+    return "w-full max-w-sm md:max-w-3xl";
+  };
 
   const displayVoucherNo =
     step === "VERIFIED"
@@ -330,356 +437,464 @@ export default function VoucherVerifyView() {
   const displayBarcodeText = `${displayVoucherNo}-${displayPin}`;
 
   return (
-    <div
-      className="mx-auto p-4 md:p-6"
-      style={{
-        maxWidth: step === "VERIFIED" ? "700px" : "400px",
-        animation: "fadeIn 0.8s ease-out forwards",
-      }}
-    >
-      {/* HEADER */}
-      {step !== "VERIFIED" && step !== "APPROVED" && step !== "ERROR" && (
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">{text.title}</h1>
-          <p className="text-sm text-gray-500">{text.subtitle}</p>
-        </div>
-      )}
-
-      {/* STEP 1: INPUT */}
-      {step === "INPUT" && (
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-          <div className="flex bg-gray-100 p-1 rounded-lg mb-6">
-            <button
-              onClick={() => {
-                setMode("PIN");
-                setErrorMsg(null);
-              }}
-              className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-                mode === "PIN"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+    <div className="w-full flex-1 flex flex-col items-center justify-center p-4 bg-gray-50">
+      <div
+        className={`transition-all duration-500 ease-out ${getContainerClass()}`}
+        style={{
+          animation: "slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        }}
+      >
+        {step !== "VERIFIED" && step !== "APPROVED" && step !== "ERROR" && (
+          <div className="text-center mb-6">
+            <h1
+              className="text-3xl md:text-4xl font-black tracking-tighter mb-2 uppercase"
+              style={{ color: eaglePrimary }}
             >
-              {text.useVoucher}
-            </button>
-            <button
-              onClick={() => {
-                setMode("BARCODE");
-                setErrorMsg(null);
-              }}
-              className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${
-                mode === "BARCODE"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {text.useBarcode}
-            </button>
+              {text.title}
+            </h1>
+            <p className="text-gray-500 font-medium tracking-wide text-sm">
+              {text.subtitle}
+            </p>
           </div>
-          <div className="space-y-4">
-            {mode === "PIN" ? (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {text.voucherNoLabel}
-                  </label>
-                  <input
-                    type="text"
-                    value={voucherNo}
-                    onChange={(e) => setVoucherNo(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder={text.voucherPlaceholder}
-                  />
+        )}
+
+        {/* STEP 1: INPUT */}
+        {step === "INPUT" && (
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8">
+            <div className="flex bg-gray-50 p-1.5 rounded-lg mb-6 max-w-md mx-auto border border-gray-100">
+              <button
+                onClick={() => {
+                  setMode("PIN");
+                  setErrorMsg(null);
+                }}
+                className={`flex-1 py-2.5 text-sm font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${
+                  mode === "PIN"
+                    ? "text-white shadow-md"
+                    : "text-gray-500 hover:bg-gray-200"
+                }`}
+                style={
+                  mode === "PIN"
+                    ? { backgroundColor: eaglePrimary }
+                    : { color: eaglePrimary }
+                }
+              >
+                {text.useVoucher}
+              </button>
+              <button
+                onClick={() => {
+                  setMode("BARCODE");
+                  setErrorMsg(null);
+                }}
+                className={`flex-1 py-2.5 text-sm font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${
+                  mode === "BARCODE"
+                    ? "text-white shadow-md"
+                    : "text-gray-500 hover:bg-gray-200"
+                }`}
+                style={
+                  mode === "BARCODE"
+                    ? { backgroundColor: eaglePrimary }
+                    : { color: eaglePrimary }
+                }
+              >
+                {text.useBarcode}
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {mode === "PIN" ? (
+                <div className="flex flex-col md:grid md:grid-cols-2 md:gap-6 space-y-6 md:space-y-0">
+                  <div className="group">
+                    <label className="block text-sm text-gray-500 font-medium mb-1.5">
+                      {text.voucherNoLabel}
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                        <IconVoucher />
+                      </div>
+                      <input
+                        type="text"
+                        maxLength={20}
+                        value={voucherNo}
+                        onChange={(e) => setVoucherNo(e.target.value)}
+                        className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-lg focus:border-[#004C54] focus:ring-1 focus:ring-[#004C54] outline-none transition-all placeholder:text-gray-400 placeholder:font-normal text-lg"
+                        placeholder={text.voucherPlaceholder}
+                      />
+                    </div>
+                  </div>
+                  <div className="group">
+                    <label className="block text-sm text-gray-500 font-medium mb-1.5">
+                      {text.pinLabel}
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                        <IconPin />
+                      </div>
+                      <input
+                        type="text"
+                        maxLength={10}
+                        value={pin}
+                        onChange={(e) => setPin(e.target.value)}
+                        className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-lg focus:border-[#004C54] focus:ring-1 focus:ring-[#004C54] outline-none transition-all placeholder:text-gray-400 placeholder:font-normal text-lg"
+                        placeholder={text.pinPlaceholder}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {text.pinLabel}
+              ) : (
+                <div className="group">
+                  <label className="block text-sm text-gray-500 font-medium mb-1.5">
+                    {text.barcodeLabel}
                   </label>
-                  <input
-                    type="text"
-                    value={pin}
-                    onChange={(e) => setPin(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder={text.pinPlaceholder}
-                  />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                      <IconBarcode />
+                    </div>
+                    <input
+                      ref={barcodeInputRef}
+                      type="text"
+                      maxLength={20}
+                      value={barcode}
+                      onChange={(e) => setBarcode(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && barcode) handleVerify();
+                      }}
+                      className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-lg focus:border-[#004C54] focus:ring-1 focus:ring-[#004C54] outline-none transition-all placeholder:text-gray-400 placeholder:font-normal text-lg"
+                      placeholder={text.barcodePlaceholder}
+                      autoFocus
+                    />
+                  </div>
                 </div>
-              </>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {text.barcodeLabel}
-                </label>
-                <input
-                  ref={barcodeInputRef}
-                  type="text"
-                  value={barcode}
-                  onChange={(e) => setBarcode(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && barcode) handleVerify();
-                  }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder={text.barcodePlaceholder}
-                  autoFocus
-                />
+              )}
+            </div>
+
+            {errorMsg && (
+              <div className="mt-6 p-4 rounded-lg bg-red-50 border border-red-100 text-red-700 text-sm font-medium flex items-center">
+                <svg
+                  className="w-5 h-5 mr-3 flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {errorMsg}
               </div>
             )}
-          </div>
-          {errorMsg && (
-            <div className="mt-4 p-3 rounded-lg bg-red-50 border-l-4 border-red-500 text-red-700 text-sm">
-              {errorMsg}
-            </div>
-          )}
-          <button
-            onClick={handleVerify}
-            disabled={isLoading}
-            className="w-full mt-6 py-3 px-4 text-white font-semibold rounded-lg transition-all active:scale-95 disabled:opacity-70"
-            style={{
-              background: primaryGradient,
-              boxShadow: `0 4px 12px ${primaryShadow}`,
-            }}
-          >
-            {isLoading ? text.checking : text.verify}
-          </button>
-          {mode === "BARCODE" && (
-            <button
-              onClick={handleClearBarcode}
-              disabled={isLoading}
-              className="w-full mt-3 py-3 px-4 text-gray-600 font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 transition-all active:scale-95"
-            >
-              {text.clear}
-            </button>
-          )}
-        </div>
-      )}
 
-      {/* STEP 2: VERIFIED (PREVIEW) */}
-      {step === "VERIFIED" && verifiedData && (
-        <div className="animate-fade-in-up">
-          <div className="bg-[#f3f5f9] rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-            <div className="bg-[#eff6ff] p-5 text-center border-b border-blue-100">
-              <h2 className="text-xl font-bold text-gray-800 leading-tight">
-                {getDisplayVal(
-                  [
-                    "PrivilegeName",
-                    "privilegeName",
-                    "CampaignName",
-                    "campaign_name",
-                  ],
-                  "Gift Voucher"
+            <div className="max-w-md mx-auto mt-8 flex flex-col gap-3">
+              <button
+                onClick={handleVerify}
+                disabled={isLoading}
+                className="w-full h-12 text-white font-medium text-lg rounded-lg transition-all transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-lg"
+                style={{
+                  background: eagleGradient,
+                  boxShadow: `0 4px 15px ${eagleShadow}`,
+                }}
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    {text.checking}
+                  </span>
+                ) : (
+                  text.verify
                 )}
-              </h2>
-              <p className="text-sm text-gray-500 mt-2">
-                {text.privilege}{" "}
-                {getDisplayVal(
-                  ["PrivilegeCode", "privilegeCode", "Id", "id"],
-                  "-"
-                )}
-              </p>
+              </button>
+
+              <button
+                onClick={handleClear}
+                disabled={isLoading}
+                className="w-full h-12 text-gray-500 font-medium text-sm rounded-lg hover:text-[#004C54] hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
+              >
+                {text.clear}
+              </button>
             </div>
-            <div className="p-6">
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
-                <div className="flex flex-col md:flex-row gap-6 items-stretch">
-                  <div className="flex-[1.5] space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
+          </div>
+        )}
+
+        {/* STEP 2: VERIFIED (PREVIEW) */}
+        {step === "VERIFIED" && verifiedData && (
+          <div className="animate-fade-in-up">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+              <div className="p-6 text-center bg-gray-50 border-b border-gray-100">
+                <h2 className="text-2xl font-bold text-gray-900 leading-tight mb-1">
+                  {getDisplayVal(
+                    [
+                      "PrivilegeName",
+                      "privilegeName",
+                      "CampaignName",
+                      "campaign_name",
+                    ],
+                    "Gift Voucher"
+                  )}
+                </h2>
+                <p className="text-sm text-gray-500">
+                  {text.privilege}{" "}
+                  {getDisplayVal(
+                    ["PrivilegeCode", "privilegeCode", "Id", "id"],
+                    "-"
+                  )}
+                </p>
+              </div>
+
+              <div className="p-6 bg-white">
+                <div className="flex flex-col md:flex-row gap-8 items-start">
+                  <div className="flex-[1.5] space-y-6 w-full">
+                    <div className="grid grid-cols-2 gap-6">
                       <div>
-                        <p className="text-xs text-gray-400 mb-1">
+                        <p className="text-sm text-gray-500 mb-1">
                           {text.voucherNo}
                         </p>
-                        <p className="text-lg font-bold text-gray-800 font-mono tracking-tight break-all">
+                        <p className="text-2xl font-bold text-gray-900 break-all font-mono tracking-tight">
                           {displayVoucherNo}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-400 mb-1">{text.pin}</p>
-                        <p className="text-lg font-bold text-gray-800 font-mono tracking-tight break-all">
+                        <p className="text-sm text-gray-500 mb-1">{text.pin}</p>
+                        <p className="text-2xl font-bold text-gray-900 break-all font-mono tracking-tight">
                           {displayPin}
                         </p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-6">
                       <div>
-                        <p className="text-xs text-gray-400 mb-1">
+                        <p className="text-sm text-gray-500 mb-1">
                           {text.startDate}
                         </p>
-                        <p className="text-sm font-medium text-gray-600">
-                          {getDisplayVal(
-                            [
-                              "StartDate",
-                              "startDate",
-                              "start_date",
-                              "EffectiveDate",
-                            ],
-                            "-"
+                        <p className="text-lg font-medium text-gray-900">
+                          {formatDate(
+                            getDisplayVal(
+                              [
+                                "StartDate",
+                                "startDate",
+                                "start_date",
+                                "EffectiveDate",
+                              ],
+                              "-"
+                            )
                           )}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-400 mb-1">
+                        <p className="text-sm text-gray-500 mb-1">
                           {text.endDate}
                         </p>
-                        <p className="text-sm font-medium text-gray-600">
-                          {getDisplayVal(
-                            [
-                              "ExpiryDate",
-                              "expiryDate",
-                              "expiry_date",
-                              "ExpireDate",
-                              "expire_date",
-                              "end_date",
-                              "EndDate",
-                              "ValidUntil",
-                              "ValidTo",
-                            ],
-                            "-"
+                        <p className="text-lg font-medium text-gray-900">
+                          {formatDate(
+                            getDisplayVal(
+                              [
+                                "ExpiryDate",
+                                "expiryDate",
+                                "end_date",
+                                "EndDate",
+                                "ValidUntil",
+                              ],
+                              "-"
+                            )
                           )}
                         </p>
                       </div>
                     </div>
                     <div>
-                      <span className="text-xs text-gray-400 mr-2">
+                      <span className="text-sm text-gray-500 mr-3">
                         {text.status}
                       </span>
                       <span
-                        className={`inline-flex px-3 py-1 text-xs font-bold rounded border uppercase ${
+                        className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${
                           ["Active", "OK", "ok", "active"].includes(
                             verifiedData.Status
                           )
-                            ? "bg-green-100 text-green-700 border-green-200"
-                            : "bg-gray-100 text-gray-700 border-gray-200"
+                            ? "bg-green-100 text-green-800"
+                            : verifiedData.Status === "Redeemed" ||
+                              verifiedData.Status === "Used"
+                            ? "bg-orange-100 text-orange-800"
+                            : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {/* ✅ Change Logic Here: if OK show Active, else show original status */}
                         {verifiedData.Status === "OK"
                           ? "Active"
                           : verifiedData.Status || "Unknown"}
                       </span>
                     </div>
                   </div>
-                  <div className="hidden md:block w-px bg-gray-100"></div>
-                  <div className="flex-1 flex flex-col items-center justify-center">
-                    <p className="text-xs text-gray-400 mb-4">{text.barcode}</p>
-                    <div className="w-full h-16 overflow-hidden flex items-end justify-center">
-                      <svg
-                        width="100%"
-                        height="100%"
-                        viewBox="0 0 240 60"
-                        preserveAspectRatio="none"
-                      >
-                        {Array.from({ length: 45 }, (_, i) => (
-                          <rect
-                            key={i}
-                            x={i * 5.5}
-                            y="0"
-                            width={Math.random() > 0.5 ? 3 : 1.5}
-                            height="60"
-                            fill="#1f2937"
-                          />
-                        ))}
-                      </svg>
+
+                  <div className="hidden md:block w-px bg-gray-100 self-stretch"></div>
+
+                  <div className="flex-1 flex flex-col items-center justify-start space-y-6 w-full">
+                    <div className="w-full flex flex-col items-center">
+                      <p className="text-sm text-gray-500 mb-2">
+                        {text.barcode}
+                      </p>
+                      <div className="w-full bg-white border-2 border-gray-100 rounded-lg p-4 flex flex-col items-center">
+                        <div className="w-full h-16 overflow-hidden flex items-end justify-center">
+                          <svg
+                            width="100%"
+                            height="100%"
+                            viewBox="0 0 240 60"
+                            preserveAspectRatio="none"
+                          >
+                            {Array.from({ length: 45 }, (_, i) => (
+                              <rect
+                                key={i}
+                                x={i * 5.5}
+                                y="0"
+                                width={Math.random() > 0.5 ? 3 : 1.5}
+                                height="60"
+                                fill="#1f2937"
+                              />
+                            ))}
+                          </svg>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2 font-mono tracking-widest text-center">
+                          {displayBarcodeText}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-600 mt-3 font-mono tracking-widest text-center">
-                      {displayBarcodeText}
-                    </p>
                   </div>
                 </div>
               </div>
+
+              <div className="bg-white p-6 border-t border-gray-100 flex gap-4">
+                <button
+                  onClick={() => setStep("INPUT")}
+                  className="flex-1 py-3 px-4 text-gray-500 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  {text.cancel}
+                </button>
+                <button
+                  onClick={handleApprove}
+                  disabled={
+                    isLoading ||
+                    verifiedData.Status === "Redeemed" ||
+                    verifiedData.Status === "Used"
+                  }
+                  className="flex-1 py-3 px-4 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
+                  style={{ background: eaglePrimary }}
+                >
+                  {isLoading ? text.processing : text.approve}
+                </button>
+              </div>
             </div>
-            <div className="bg-white p-5 border-t border-gray-200 flex gap-4">
+          </div>
+        )}
+
+        {/* STEP 3: SUCCESS */}
+        {step === "APPROVED" && (
+          <div className="animate-fade-in-up">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-10 text-center flex flex-col items-center justify-center max-w-md mx-auto">
+              <div className="mb-6 inline-flex p-5 rounded-full bg-[#E0F2F1] text-[#004C54]">
+                <svg
+                  className="w-16 h-16"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3 tracking-tight">
+                {text.successTitle}
+              </h2>
+              <p className="text-gray-500 text-lg leading-relaxed font-medium mb-8">
+                {text.successMsg}
+              </p>
               <button
-                onClick={() => setStep("INPUT")}
-                className="flex-1 py-3 px-4 border border-red-500 text-red-500 text-lg font-medium rounded-lg hover:bg-red-50 transition-colors"
+                onClick={handleReset}
+                className="w-64 h-12 text-white font-medium text-lg rounded-lg transition-all transform active:scale-[0.98] hover:shadow-lg"
+                style={{
+                  background: eaglePrimary,
+                  boxShadow: `0 4px 15px ${eagleShadow}`,
+                }}
               >
-                {text.cancel}
-              </button>
-              <button
-                onClick={handleApprove}
-                disabled={isLoading}
-                className="flex-1 py-3 px-4 bg-[#ee0000] text-white text-lg font-medium rounded-lg shadow hover:bg-red-700 transition-all disabled:opacity-70"
-              >
-                {isLoading ? text.processing : text.approve}
+                {text.backToHome}
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* --- STEP 3: SUCCESS (Green) --- */}
-      {step === "APPROVED" && (
-        <div className="animate-fade-in-up">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center flex flex-col items-center justify-center">
-            <div className="mb-6 inline-flex p-5 rounded-full bg-green-50 text-green-500 shadow-sm ring-8 ring-green-50/50">
-              <svg
-                className="w-16 h-16"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={3}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
+        {/* STEP 4: ERROR */}
+        {step === "ERROR" && (
+          <div className="animate-fade-in-up">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-10 text-center flex flex-col items-center justify-center max-w-md mx-auto">
+              <div className="mb-6 inline-flex p-5 rounded-full bg-red-50 text-red-600">
+                <svg
+                  className="w-16 h-16"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3 tracking-tight">
+                {text.errorTitle}
+              </h2>
+              <p className="text-gray-500 text-lg leading-relaxed font-medium mb-8">
+                {approveError}
+              </p>
+              <div className="w-64 space-y-4">
+                <button
+                  onClick={handleTryAgain}
+                  className="w-full px-8 py-3 bg-red-600 text-white font-bold uppercase rounded-lg shadow-md hover:bg-red-700 transition-all active:scale-95"
+                >
+                  {text.tryAgain}
+                </button>
+                <button
+                  onClick={handleReset}
+                  className="w-full px-8 py-3 text-gray-500 font-medium uppercase rounded-lg hover:bg-gray-50 transition-all"
+                >
+                  {text.backToHome}
+                </button>
+              </div>
             </div>
-            <h2 className="text-3xl font-extrabold text-gray-800 mb-3 tracking-tight">
-              {text.successTitle}
-            </h2>
-            <p className="text-gray-500 text-lg leading-relaxed font-medium">
-              {text.successMsg}
-            </p>
           </div>
-        </div>
-      )}
-
-      {/* --- STEP 4: ERROR (Red) --- */}
-      {step === "ERROR" && (
-        <div className="animate-fade-in-up">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center flex flex-col items-center justify-center">
-            <div className="mb-6 inline-flex p-5 rounded-full bg-red-50 text-red-500 shadow-sm ring-8 ring-red-50/50">
-              <svg
-                className="w-16 h-16"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={3}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </div>
-            <h2 className="text-3xl font-extrabold text-gray-800 mb-3 tracking-tight">
-              {text.errorTitle}
-            </h2>
-            <p className="text-gray-500 text-lg leading-relaxed font-medium mb-8">
-              {approveError}
-            </p>
-            <button
-              onClick={handleTryAgain}
-              className="px-8 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-all active:scale-95"
-            >
-              {text.tryAgain}
-            </button>
-          </div>
-        </div>
-      )}
-
+        )}
+      </div>
       <style jsx global>{`
-        @keyframes fadeIn {
+        @keyframes slideUp {
           from {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(20px);
           }
           to {
             opacity: 1;
             transform: translateY(0);
           }
         }
-        .animate-fade-in-up {
-          animation: fadeIn 0.5s ease-out forwards;
+        .animate-bounce-slow {
+          animation: bounce 3s infinite;
         }
       `}</style>
     </div>

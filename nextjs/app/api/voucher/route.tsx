@@ -1,17 +1,6 @@
-/**
- * API Route: /api/voucher
- *
- * Proxies Voucher requests to the backend API.
- * Features:
- * - Reads domain from NEXT_PUBLIC_API_URL
- * - Calls ApproveVoucherUsedById for approval
- * - Normalizes Backend Status (Success -> OK)
- */
-
 import { NextRequest, NextResponse } from "next/server";
 
 // Types
-
 type VoucherAction = "VERIFY_PIN" | "VERIFY_BARCODE" | "APPROVE";
 
 interface VoucherRequestBody {
@@ -23,74 +12,71 @@ interface VoucherRequestBody {
   voucherId?: string;
 }
 
-// API Route Handler
+// ✅ Helper Function: หาค่าจาก Object โดยไม่สนตัวพิมพ์เล็ก/ใหญ่ (Case Insensitive)
+function findValue(obj: any, candidates: string[]): any {
+  if (!obj) return null;
+  const keys = Object.keys(obj);
+
+  for (const candidate of candidates) {
+    if (obj[candidate] !== undefined && obj[candidate] !== null)
+      return obj[candidate];
+
+    const foundKey = keys.find(
+      (k) => k.toLowerCase() === candidate.toLowerCase()
+    );
+    if (foundKey && obj[foundKey]) return obj[foundKey];
+  }
+  return null;
+}
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("🎫 /api/voucher - INCOMING REQUEST");
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("\n🔥 --- VOUCHER PROXY DEBUG START ---");
 
-    // 1. Parse request body
     const body: VoucherRequestBody = await request.json();
-    console.log("Request Action:", body.action);
-    console.log("Org:", body.org);
 
-    // 2. Validate Request
     if (!body.org || !body.action) {
       return NextResponse.json(
-        {
-          Status: "ERROR",
-          Description: "Invalid request: 'org' and 'action' are required",
-        },
+        { Status: "ERROR", Description: "Invalid request" },
         { status: 400 }
       );
     }
 
-    // 3. Configure Backend URL (Requirement: Read from NEXT_PUBLIC_API_URL)
     const apiBaseUrl =
-      process.env.NEXT_PUBLIC_API_URL || 
+      process.env.NEXT_PUBLIC_API_URL ||
       process.env.API_BASE_URL ||
-      "https://api-dev.please-scan.com"; // Default for local dev
-
-    if (!apiBaseUrl) {
-      console.error("NEXT_PUBLIC_API_URL not configured");
-      return NextResponse.json(
-        {
-          Status: "ERROR",
-          Description: "Server configuration error (Missing API URL)",
-        },
-        { status: 500 }
-      );
-    }
-
+      "https://api-dev.please-scan.com";
     let backendUrl = "";
 
-    // 4. Construct Backend URL
+    // Construct URL
     switch (body.action) {
       case "VERIFY_PIN":
-        if (!body.voucherNo || !body.pin) throw new Error("Missing parameters: voucherNo, pin");
-        backendUrl = `${apiBaseUrl}/api/Voucher/org/${body.org}/action/VerifyVoucherByPin/${encodeURIComponent(body.voucherNo)}/${encodeURIComponent(body.pin)}`;
+        backendUrl = `${apiBaseUrl}/api/Voucher/org/${
+          body.org
+        }/action/VerifyVoucherByPin/${encodeURIComponent(
+          body.voucherNo || ""
+        )}/${encodeURIComponent(body.pin || "")}`;
         break;
-
       case "VERIFY_BARCODE":
-        if (!body.barcode) throw new Error("Missing parameters: barcode");
-        backendUrl = `${apiBaseUrl}/api/Voucher/org/${body.org}/action/VerifyVoucherByBarcode/${encodeURIComponent(body.barcode)}`;
+        backendUrl = `${apiBaseUrl}/api/Voucher/org/${
+          body.org
+        }/action/VerifyVoucherByBarcode/${encodeURIComponent(
+          body.barcode || ""
+        )}`;
         break;
-
       case "APPROVE":
-        if (!body.voucherId || !body.pin) throw new Error("Missing parameters: voucherId, pin");
-        backendUrl = `${apiBaseUrl}/api/Voucher/org/${body.org}/action/ApproveVoucherUsedById/${body.voucherId}/${encodeURIComponent(body.pin)}`;
+        if (!body.voucherId || !body.pin)
+          throw new Error("Missing parameters: voucherId or pin");
+        backendUrl = `${apiBaseUrl}/api/Voucher/org/${
+          body.org
+        }/action/ApproveVoucherUsedById/${body.voucherId}/${encodeURIComponent(
+          body.pin
+        )}`;
         break;
-
-      default:
-        return NextResponse.json({ Status: "ERROR", Description: "Invalid Action" }, { status: 400 });
     }
 
-    console.log("\n🌐 CALLING BACKEND API");
-    console.log("Target URL:", backendUrl);
+    console.log(`🌐 Fetching: ${backendUrl}`);
 
-    // 5. Call Backend
     const backendResponse = await fetch(backendUrl, {
       method: "POST",
       headers: {
@@ -100,87 +86,124 @@ export async function POST(request: NextRequest) {
       cache: "no-store",
     });
 
-    // 6. Read Raw Response
     const responseText = await backendResponse.text();
-    
-    console.log("\n🔍 RAW RESPONSE BODY:");
-    console.log(responseText ? responseText : "(Empty)");
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("📦 Raw Response from C#:", responseText);
 
-    // Handle HTTP Errors (Requirement: Check http status = 200)
     if (!backendResponse.ok) {
-      console.error("❌ Backend Error Status:", backendResponse.status);
       return NextResponse.json(
         {
           Status: "ERROR",
-          Description: `Backend Error: ${backendResponse.status}`,
-          DebugBody: responseText
+          Description: "Backend Error",
+          DebugBody: responseText,
         },
         { status: backendResponse.status }
       );
     }
 
-    // 7. Parse & Normalize JSON
     let backendData: any = {};
     try {
-        if (responseText) {
-            backendData = JSON.parse(responseText);
-        }
-    } catch (e) {
-        console.error("JSON Parse Error:", e);
-        return NextResponse.json(
-            { Status: "ERROR", Description: "Invalid JSON from Backend", Raw: responseText },
-            { status: 500 }
-        );
-    }
+      backendData = JSON.parse(responseText);
+    } catch (e) {}
 
-    // Normalization: Requirement -> Status ต้องเท่ากับ "OK"
-    let finalStatus = backendData.Status || backendData.status || (backendData.IsSuccess ? "OK" : "ERROR");
+    // DATA EXTRACTION
 
-    // Handle variated success messages
-    if (finalStatus === 'Success' || finalStatus === 'success' || finalStatus === 'Active') {
-        finalStatus = 'OK';
-    }
-    
-    // Fallback: ถ้าไม่มี Status แต่มี ID กลับมา ถือว่า OK
-    if (!finalStatus && (backendData.Id || backendData.id)) {
-        finalStatus = 'OK';
-    }
-
-    const normalizedData = {
-        ...backendData,
-        // Override Status ให้เป็นค่าที่เรา Normalize แล้ว
-        Status: finalStatus || "ERROR",
-        Description: backendData.Description || backendData.description || backendData.ErrorMessage || "",
-        
-        Id: backendData.Id || backendData.id,
-        VoucherNo: backendData.VoucherNo || backendData.voucherNo,
-        Pin: backendData.Pin || backendData.pin,
-        PrivilegeName: backendData.PrivilegeName || backendData.privilegeName,
-        ExpiryDate: backendData.ExpiryDate || backendData.expiryDate,
+    const flatData = {
+      ...backendData,
+      ...(backendData.Voucher || backendData.voucher || {}),
     };
 
-    console.log("✅ NORMALIZED JSON (Sent to Client):");
-    console.log(JSON.stringify(normalizedData, null, 2));
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+    console.log("✨ Flattened Data:", JSON.stringify(flatData, null, 2));
+
+    // 2. Normalize Status
+    let statusRaw = findValue(flatData, ["Status", "status", "IsSuccess"]);
+    let finalStatus = "ERROR";
+    if (
+      ["OK", "Ok", "ok", "Success", "success", "Active", "active"].includes(
+        statusRaw
+      ) ||
+      statusRaw === true
+    ) {
+      finalStatus = "OK";
+    }
+    if (findValue(flatData, ["Id", "VoucherId"])) {
+      finalStatus = "OK";
+    }
+
+    // 3. Map Data using Case-Insensitive Finder
+    const normalizedData = {
+      Status: finalStatus,
+      Description:
+        findValue(flatData, ["Description", "description", "ErrorMessage"]) ||
+        "",
+
+      // ID
+      Id: findValue(flatData, [
+        "Id",
+        "id",
+        "VoucherId",
+        "voucherId",
+        "voucher_id",
+      ]),
+
+      // Voucher Info
+      VoucherNo: findValue(flatData, [
+        "VoucherNo",
+        "voucherNo",
+        "voucher_no",
+        "Serial",
+      ]),
+      Pin: findValue(flatData, ["Pin", "pin"]),
+      Barcode: findValue(flatData, ["Barcode", "barcode"]),
+
+      // Privilege Info
+      PrivilegeName: findValue(flatData, [
+        "PrivilegeName",
+        "privilegeName",
+        "CampaignName",
+        "campaign_name",
+      ]),
+      PrivilegeCode: findValue(flatData, [
+        "PrivilegeCode",
+        "privilegeCode",
+        "privilege_code",
+      ]),
+
+      StartDate: findValue(flatData, [
+        "StartDate",
+        "startDate",
+        "start_date",
+        "EffectiveDate",
+        "effectiveDate",
+      ]),
+      ExpiryDate: findValue(flatData, [
+        "ExpiryDate",
+        "expiryDate",
+        "expiry_date",
+        "ExpireDate",
+        "expireDate",
+        "ValidUntil",
+        "validUntil",
+        "EndDate",
+        "endDate",
+      ]),
+    };
+
+    console.log(
+      "✅ Final Response to Frontend:",
+      JSON.stringify(normalizedData, null, 2)
+    );
+    console.log("🔥 --- DEBUG END --- \n");
 
     return NextResponse.json(normalizedData, { status: 200 });
-
   } catch (error: any) {
-    console.error("Voucher Proxy Error:", error);
+    console.error("Proxy Error:", error);
     return NextResponse.json(
-      {
-        Status: "ERROR",
-        Description: error.message || "Internal Server Error",
-      },
+      { Status: "ERROR", Description: error.message },
       { status: 500 }
     );
   }
 }
 
 export async function GET() {
-  return NextResponse.json(
-    { Status: "ERROR", Description: "Method not allowed. Use POST." },
-    { status: 405 }
-  );
+  return NextResponse.json({ Status: "ERROR" }, { status: 405 });
 }
