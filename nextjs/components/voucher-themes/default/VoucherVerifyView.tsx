@@ -232,9 +232,12 @@ export default function VoucherVerifyView() {
           json.Serial ||
           json.serial;
         const pinVal = json.Pin || json.pin || json.PIN;
-        if (barcodeVal) setBarcode(barcodeVal);
-        if (voucherVal) setVoucherNo(voucherVal);
-        if (pinVal) setPin(pinVal);
+
+        // Force Uppercase for initial data
+        if (barcodeVal) setBarcode(String(barcodeVal).toUpperCase());
+        if (voucherVal) setVoucherNo(String(voucherVal).toUpperCase());
+        if (pinVal) setPin(String(pinVal).toUpperCase());
+
         if (voucherVal) setMode("PIN");
         else if (barcodeVal) setMode("BARCODE");
       } catch (e) {
@@ -344,9 +347,8 @@ export default function VoucherVerifyView() {
           Status: "Redeemed",
         }));
 
-
-        setApproveError(data.Description); 
-        setStep("ERROR"); 
+        setApproveError(data.Description);
+        setStep("ERROR");
 
         setIsLoading(false);
         return;
@@ -515,8 +517,10 @@ export default function VoucherVerifyView() {
                         type="text"
                         maxLength={20}
                         value={voucherNo}
-                        onChange={(e) => setVoucherNo(e.target.value)}
-                        className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-lg focus:border-[#004C54] focus:ring-1 focus:ring-[#004C54] outline-none transition-all placeholder:text-gray-400 placeholder:font-normal text-lg"
+                        onChange={(e) =>
+                          setVoucherNo(e.target.value.toUpperCase())
+                        }
+                        className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-lg focus:border-[#004C54] focus:ring-1 focus:ring-[#004C54] outline-none transition-all placeholder:text-gray-400 placeholder:font-normal text-lg uppercase"
                         placeholder={text.voucherPlaceholder}
                       />
                     </div>
@@ -533,8 +537,8 @@ export default function VoucherVerifyView() {
                         type="text"
                         maxLength={10}
                         value={pin}
-                        onChange={(e) => setPin(e.target.value)}
-                        className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-lg focus:border-[#004C54] focus:ring-1 focus:ring-[#004C54] outline-none transition-all placeholder:text-gray-400 placeholder:font-normal text-lg"
+                        onChange={(e) => setPin(e.target.value.toUpperCase())}
+                        className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-lg focus:border-[#004C54] focus:ring-1 focus:ring-[#004C54] outline-none transition-all placeholder:text-gray-400 placeholder:font-normal text-lg uppercase"
                         placeholder={text.pinPlaceholder}
                       />
                     </div>
@@ -554,11 +558,11 @@ export default function VoucherVerifyView() {
                       type="text"
                       maxLength={20}
                       value={barcode}
-                      onChange={(e) => setBarcode(e.target.value)}
+                      onChange={(e) => setBarcode(e.target.value.toUpperCase())}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && barcode) handleVerify();
                       }}
-                      className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-lg focus:border-[#004C54] focus:ring-1 focus:ring-[#004C54] outline-none transition-all placeholder:text-gray-400 placeholder:font-normal text-lg"
+                      className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-lg focus:border-[#004C54] focus:ring-1 focus:ring-[#004C54] outline-none transition-all placeholder:text-gray-400 placeholder:font-normal text-lg uppercase"
                       placeholder={text.barcodePlaceholder}
                       autoFocus
                     />
@@ -667,13 +671,13 @@ export default function VoucherVerifyView() {
                         <p className="text-sm text-gray-500 mb-1">
                           {text.voucherNo}
                         </p>
-                        <p className="text-2xl font-bold text-gray-900 break-all font-mono tracking-tight">
+                        <p className="text-2xl font-bold text-gray-900 break-all font-mono tracking-tight uppercase">
                           {displayVoucherNo}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500 mb-1">{text.pin}</p>
-                        <p className="text-2xl font-bold text-gray-900 break-all font-mono tracking-tight">
+                        <p className="text-2xl font-bold text-gray-900 break-all font-mono tracking-tight uppercase">
                           {displayPin}
                         </p>
                       </div>
@@ -767,7 +771,7 @@ export default function VoucherVerifyView() {
                             ))}
                           </svg>
                         </div>
-                        <p className="text-sm text-gray-600 mt-2 font-mono tracking-widest text-center">
+                        <p className="text-sm text-gray-600 mt-2 font-mono tracking-widest text-center uppercase">
                           {displayBarcodeText}
                         </p>
                       </div>
