@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Particles from "@/components/Particles";
+// import Particles from "@/components/Particles"; // ถ้าไม่ได้ใช้เอาออกได้ครับ
 
 // --- Icons (SVG Components) ---
 const IconVoucher = () => (
@@ -423,7 +423,6 @@ export default function VoucherVerifyView() {
   };
 
   const eaglePrimary = "#004C54";
-  const eagleGradient = "linear-gradient(135deg, #004C54 0%, #046A74 100%)";
   const eagleShadow = "rgba(0, 76, 84, 0.4)";
 
   const getContainerClass = () => {
@@ -463,9 +462,9 @@ export default function VoucherVerifyView() {
         {/* STEP 1: INPUT */}
         {step === "INPUT" && (
           <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl shadow-2xl border border-gray-700 p-4 overflow-hidden">
-            {/* Decorative gradient orbs */}
-            <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-orange-500/20 to-pink-600/20 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-gradient-to-br from-pink-600/20 to-orange-500/20 rounded-full blur-3xl"></div>
+            {/* Decorative gradient orbs - ปรับสีให้เข้ากับธีมฟ้า/เขียวเข้ม */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-sky-500/20 to-teal-600/20 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-gradient-to-br from-teal-600/20 to-sky-500/20 rounded-full blur-3xl"></div>
 
             <div className="relative z-10">
               <div className="flex bg-gray-800/50 backdrop-blur-sm p-2 rounded-2xl mb-8 max-w-md mx-auto border border-gray-700">
@@ -476,7 +475,7 @@ export default function VoucherVerifyView() {
                   }}
                   className={`flex-1 py-3.5 text-sm font-bold uppercase tracking-wide rounded-xl transition-all duration-300 ${
                     mode === "PIN"
-                      ? "bg-gradient-to-r from-orange-500 to-pink-600 text-white shadow-lg shadow-orange-500/30"
+                      ? "bg-sky-600 text-white shadow-lg shadow-sky-500/30 hover:bg-sky-500"
                       : "text-gray-400 hover:text-white hover:bg-gray-700/50"
                   }`}
                 >
@@ -489,7 +488,7 @@ export default function VoucherVerifyView() {
                   }}
                   className={`flex-1 py-3.5 text-sm font-bold uppercase tracking-wide rounded-xl transition-all duration-300 ${
                     mode === "BARCODE"
-                      ? "bg-gradient-to-r from-orange-500 to-pink-600 text-white shadow-lg shadow-orange-500/30"
+                      ? "bg-sky-600 text-white shadow-lg shadow-sky-500/30 hover:bg-sky-500" // <-- CHANGED: Blue solid
                       : "text-gray-400 hover:text-white hover:bg-gray-700/50"
                   }`}
                 >
@@ -505,7 +504,9 @@ export default function VoucherVerifyView() {
                         {text.voucherNoLabel}
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-orange-500">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-sky-400">
+                          {" "}
+                          {/* <-- CHANGED: Icon Color */}
                           <IconVoucher />
                         </div>
                         <input
@@ -515,7 +516,7 @@ export default function VoucherVerifyView() {
                           onChange={(e) =>
                             setVoucherNo(e.target.value.toUpperCase())
                           }
-                          className="w-full h-14 pl-12 pr-4 bg-gray-800/80 border-2 border-gray-700 text-white font-bold rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 outline-none transition-all placeholder:text-gray-600 text-lg uppercase hover:border-gray-600"
+                          className="w-full h-14 pl-12 pr-4 bg-gray-800/80 border-2 border-gray-700 text-white font-bold rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 outline-none transition-all placeholder:text-gray-600 text-lg uppercase hover:border-gray-600" // <-- CHANGED: Focus Color
                           placeholder={text.voucherPlaceholder}
                         />
                       </div>
@@ -525,7 +526,9 @@ export default function VoucherVerifyView() {
                         {text.pinLabel}
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-pink-500">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-sky-400">
+                          {" "}
+                          {/* <-- CHANGED: Icon Color */}
                           <IconPin />
                         </div>
                         <input
@@ -533,7 +536,7 @@ export default function VoucherVerifyView() {
                           maxLength={10}
                           value={pin}
                           onChange={(e) => setPin(e.target.value.toUpperCase())}
-                          className="w-full h-14 pl-12 pr-4 bg-gray-800/80 border-2 border-gray-700 text-white font-bold rounded-xl focus:border-pink-500 focus:ring-2 focus:ring-pink-500/30 outline-none transition-all placeholder:text-gray-600 text-lg uppercase hover:border-gray-600"
+                          className="w-full h-14 pl-12 pr-4 bg-gray-800/80 border-2 border-gray-700 text-white font-bold rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 outline-none transition-all placeholder:text-gray-600 text-lg uppercase hover:border-gray-600" // <-- CHANGED: Focus Color
                           placeholder={text.pinPlaceholder}
                         />
                       </div>
@@ -545,7 +548,9 @@ export default function VoucherVerifyView() {
                       {text.barcodeLabel}
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-orange-500">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-sky-400">
+                        {" "}
+                        {/* <-- CHANGED: Icon Color */}
                         <IconBarcode />
                       </div>
                       <input
@@ -559,7 +564,7 @@ export default function VoucherVerifyView() {
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && barcode) handleVerify();
                         }}
-                        className="w-full h-14 pl-12 pr-4 bg-gray-800/80 border-2 border-gray-700 text-white font-bold rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 outline-none transition-all placeholder:text-gray-600 text-lg uppercase hover:border-gray-600"
+                        className="w-full h-14 pl-12 pr-4 bg-gray-800/80 border-2 border-gray-700 text-white font-bold rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 outline-none transition-all placeholder:text-gray-600 text-lg uppercase hover:border-gray-600" // <-- CHANGED: Focus Color
                         placeholder={text.barcodePlaceholder}
                         autoFocus
                       />
@@ -589,7 +594,7 @@ export default function VoucherVerifyView() {
                 <button
                   onClick={handleVerify}
                   disabled={isLoading}
-                  className="relative w-full h-14 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold text-lg rounded-xl transition-all transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-orange-500/30 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden group"
+                  className="relative w-full h-14 bg-sky-600 text-white font-bold text-lg rounded-xl transition-all transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-sky-500/30 hover:bg-sky-500 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden group" // <-- CHANGED: Solid Blue, Hover lighter blue
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                   <span className="relative z-10 flex items-center justify-center gap-2">
@@ -791,8 +796,8 @@ export default function VoucherVerifyView() {
                     verifiedData.Status === "Redeemed" ||
                     verifiedData.Status === "Used"
                   }
-                  className="flex-1 py-3 px-4 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
-                  style={{ background: eaglePrimary }}
+                  className="flex-1 py-3 px-4 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 bg-sky-600"
+                  
                 >
                   {isLoading ? text.processing : text.approve}
                 </button>
@@ -828,9 +833,8 @@ export default function VoucherVerifyView() {
               </p>
               <button
                 onClick={handleReset}
-                className="w-64 h-12 text-white font-medium text-lg rounded-lg transition-all transform active:scale-[0.98] hover:shadow-lg"
+                className="bg-sky-600 w-64 h-12 text-white font-medium text-lg rounded-lg transition-all transform active:scale-[0.98] hover:shadow-lg"
                 style={{
-                  background: eaglePrimary,
                   boxShadow: `0 4px 15px ${eagleShadow}`,
                 }}
               >
