@@ -441,22 +441,9 @@ export default function VoucherVerifyView() {
 
   return (
     <div className=" relative w-full flex-1 flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-950 via-gray-900 to-black">
-      <div className="absolute inset-0">
-        <Particles
-          particleColors={["#ffffff", "#ffffff"]}
-          particleCount={500}
-          particleSpread={20}
-          speed={0.3}
-          particleBaseSize={100}
-          moveParticlesOnHover={false}
-          alphaParticles={false}
-          disableRotation={false}
-        />
-      </div>
       <div
         className={`transition-all duration-500 ease-out z-10 ${getContainerClass()}`}
         style={{
-          // UPDATED: ปรับ timing function ให้สมูทขึ้น (ease out ช้าๆตอนปลาย) และเพิ่มเวลาเป็น 0.8s
           animation: "slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards",
         }}
       >
