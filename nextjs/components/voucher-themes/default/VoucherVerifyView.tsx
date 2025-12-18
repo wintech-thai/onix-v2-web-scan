@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+// import Particles from "@/components/Particles"; // ถ้าไม่ได้ใช้เอาออกได้ครับ
 
 // --- Icons (SVG Components) ---
 const IconVoucher = () => (
@@ -232,9 +233,12 @@ export default function VoucherVerifyView() {
           json.Serial ||
           json.serial;
         const pinVal = json.Pin || json.pin || json.PIN;
-        if (barcodeVal) setBarcode(barcodeVal);
-        if (voucherVal) setVoucherNo(voucherVal);
-        if (pinVal) setPin(pinVal);
+
+        // Force Uppercase for initial data
+        if (barcodeVal) setBarcode(String(barcodeVal).toUpperCase());
+        if (voucherVal) setVoucherNo(String(voucherVal).toUpperCase());
+        if (pinVal) setPin(String(pinVal).toUpperCase());
+
         if (voucherVal) setMode("PIN");
         else if (barcodeVal) setMode("BARCODE");
       } catch (e) {
@@ -344,9 +348,8 @@ export default function VoucherVerifyView() {
           Status: "Redeemed",
         }));
 
-
-        setApproveError(data.Description); 
-        setStep("ERROR"); 
+        setApproveError(data.Description);
+        setStep("ERROR");
 
         setIsLoading(false);
         return;
@@ -420,7 +423,6 @@ export default function VoucherVerifyView() {
   };
 
   const eaglePrimary = "#004C54";
-  const eagleGradient = "linear-gradient(135deg, #004C54 0%, #046A74 100%)";
   const eagleShadow = "rgba(0, 76, 84, 0.4)";
 
   const getContainerClass = () => {
@@ -437,199 +439,203 @@ export default function VoucherVerifyView() {
   const displayBarcodeText = `${displayVoucherNo}-${displayPin}`;
 
   return (
-    <div className="w-full flex-1 flex flex-col items-center justify-center p-4 bg-gray-50">
+    <div className=" relative w-full flex-1 flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-950 via-gray-900 to-black">
       <div
-        className={`transition-all duration-500 ease-out ${getContainerClass()}`}
+        className={`transition-all duration-500 ease-out z-10 ${getContainerClass()}`}
         style={{
-          animation: "slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+          animation: "slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards",
         }}
       >
         {step !== "VERIFIED" && step !== "APPROVED" && step !== "ERROR" && (
           <div className="text-center mb-6">
             <h1
               className="text-3xl md:text-4xl font-black tracking-tighter mb-2 uppercase"
-              style={{ color: eaglePrimary }}
+              style={{ color: "white" }}
             >
               {text.title}
             </h1>
-            <p className="text-gray-500 font-medium tracking-wide text-sm">
+            <p className="text-gray-300 font-medium tracking-wide text-sm">
               {text.subtitle}
             </p>
           </div>
         )}
-
         {/* STEP 1: INPUT */}
         {step === "INPUT" && (
-          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8">
-            <div className="flex bg-gray-50 p-1.5 rounded-lg mb-6 max-w-md mx-auto border border-gray-100">
-              <button
-                onClick={() => {
-                  setMode("PIN");
-                  setErrorMsg(null);
-                }}
-                className={`flex-1 py-2.5 text-sm font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${
-                  mode === "PIN"
-                    ? "text-white shadow-md"
-                    : "text-gray-500 hover:bg-gray-200"
-                }`}
-                style={
-                  mode === "PIN"
-                    ? { backgroundColor: eaglePrimary }
-                    : { color: eaglePrimary }
-                }
-              >
-                {text.useVoucher}
-              </button>
-              <button
-                onClick={() => {
-                  setMode("BARCODE");
-                  setErrorMsg(null);
-                }}
-                className={`flex-1 py-2.5 text-sm font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${
-                  mode === "BARCODE"
-                    ? "text-white shadow-md"
-                    : "text-gray-500 hover:bg-gray-200"
-                }`}
-                style={
-                  mode === "BARCODE"
-                    ? { backgroundColor: eaglePrimary }
-                    : { color: eaglePrimary }
-                }
-              >
-                {text.useBarcode}
-              </button>
-            </div>
+          <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl shadow-2xl border border-gray-700 p-4 overflow-hidden">
+            {/* Decorative gradient orbs - ปรับสีให้เข้ากับธีมฟ้า/เขียวเข้ม */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-sky-500/20 to-teal-600/20 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-gradient-to-br from-teal-600/20 to-sky-500/20 rounded-full blur-3xl"></div>
 
-            <div className="space-y-6">
-              {mode === "PIN" ? (
-                <div className="flex flex-col md:grid md:grid-cols-2 md:gap-6 space-y-6 md:space-y-0">
+            <div className="relative z-10">
+              <div className="flex bg-gray-800/50 backdrop-blur-sm p-2 rounded-2xl mb-8 max-w-md mx-auto border border-gray-700">
+                <button
+                  onClick={() => {
+                    setMode("PIN");
+                    setErrorMsg(null);
+                  }}
+                  className={`flex-1 py-3.5 text-sm font-bold uppercase tracking-wide rounded-xl transition-all duration-300 ${
+                    mode === "PIN"
+                      ? "bg-sky-600 text-white shadow-lg shadow-sky-500/30 hover:bg-sky-500"
+                      : "text-gray-400 hover:text-white hover:bg-gray-700/50"
+                  }`}
+                >
+                  {text.useVoucher}
+                </button>
+                <button
+                  onClick={() => {
+                    setMode("BARCODE");
+                    setErrorMsg(null);
+                  }}
+                  className={`flex-1 py-3.5 text-sm font-bold uppercase tracking-wide rounded-xl transition-all duration-300 ${
+                    mode === "BARCODE"
+                      ? "bg-sky-600 text-white shadow-lg shadow-sky-500/30 hover:bg-sky-500" // <-- CHANGED: Blue solid
+                      : "text-gray-400 hover:text-white hover:bg-gray-700/50"
+                  }`}
+                >
+                  {text.useBarcode}
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {mode === "PIN" ? (
+                  <div className="flex flex-col md:grid md:grid-cols-2 md:gap-6 space-y-6 md:space-y-0">
+                    <div className="group">
+                      <label className="block text-sm text-gray-400 font-semibold mb-2.5 uppercase tracking-wide">
+                        {text.voucherNoLabel}
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-sky-400">
+                          {" "}
+                          {/* <-- CHANGED: Icon Color */}
+                          <IconVoucher />
+                        </div>
+                        <input
+                          type="text"
+                          maxLength={20}
+                          value={voucherNo}
+                          onChange={(e) =>
+                            setVoucherNo(e.target.value.toUpperCase())
+                          }
+                          className="w-full h-14 pl-12 pr-4 bg-gray-800/80 border-2 border-gray-700 text-white font-bold rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 outline-none transition-all placeholder:text-gray-600 text-lg uppercase hover:border-gray-600" // <-- CHANGED: Focus Color
+                          placeholder={text.voucherPlaceholder}
+                        />
+                      </div>
+                    </div>
+                    <div className="group">
+                      <label className="block text-sm text-gray-400 font-semibold mb-2.5 uppercase tracking-wide">
+                        {text.pinLabel}
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-sky-400">
+                          {" "}
+                          {/* <-- CHANGED: Icon Color */}
+                          <IconPin />
+                        </div>
+                        <input
+                          type="text"
+                          maxLength={10}
+                          value={pin}
+                          onChange={(e) => setPin(e.target.value.toUpperCase())}
+                          className="w-full h-14 pl-12 pr-4 bg-gray-800/80 border-2 border-gray-700 text-white font-bold rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 outline-none transition-all placeholder:text-gray-600 text-lg uppercase hover:border-gray-600" // <-- CHANGED: Focus Color
+                          placeholder={text.pinPlaceholder}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                   <div className="group">
-                    <label className="block text-sm text-gray-500 font-medium mb-1.5">
-                      {text.voucherNoLabel}
+                    <label className="block text-sm text-gray-400 font-semibold mb-2.5 uppercase tracking-wide">
+                      {text.barcodeLabel}
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-                        <IconVoucher />
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-sky-400">
+                        {" "}
+                        {/* <-- CHANGED: Icon Color */}
+                        <IconBarcode />
                       </div>
                       <input
+                        ref={barcodeInputRef}
                         type="text"
                         maxLength={20}
-                        value={voucherNo}
-                        onChange={(e) => setVoucherNo(e.target.value)}
-                        className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-lg focus:border-[#004C54] focus:ring-1 focus:ring-[#004C54] outline-none transition-all placeholder:text-gray-400 placeholder:font-normal text-lg"
-                        placeholder={text.voucherPlaceholder}
+                        value={barcode}
+                        onChange={(e) =>
+                          setBarcode(e.target.value.toUpperCase())
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && barcode) handleVerify();
+                        }}
+                        className="w-full h-14 pl-12 pr-4 bg-gray-800/80 border-2 border-gray-700 text-white font-bold rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 outline-none transition-all placeholder:text-gray-600 text-lg uppercase hover:border-gray-600" // <-- CHANGED: Focus Color
+                        placeholder={text.barcodePlaceholder}
+                        autoFocus
                       />
                     </div>
                   </div>
-                  <div className="group">
-                    <label className="block text-sm text-gray-500 font-medium mb-1.5">
-                      {text.pinLabel}
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-                        <IconPin />
-                      </div>
-                      <input
-                        type="text"
-                        maxLength={10}
-                        value={pin}
-                        onChange={(e) => setPin(e.target.value)}
-                        className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-lg focus:border-[#004C54] focus:ring-1 focus:ring-[#004C54] outline-none transition-all placeholder:text-gray-400 placeholder:font-normal text-lg"
-                        placeholder={text.pinPlaceholder}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="group">
-                  <label className="block text-sm text-gray-500 font-medium mb-1.5">
-                    {text.barcodeLabel}
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-                      <IconBarcode />
-                    </div>
-                    <input
-                      ref={barcodeInputRef}
-                      type="text"
-                      maxLength={20}
-                      value={barcode}
-                      onChange={(e) => setBarcode(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && barcode) handleVerify();
-                      }}
-                      className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-lg focus:border-[#004C54] focus:ring-1 focus:ring-[#004C54] outline-none transition-all placeholder:text-gray-400 placeholder:font-normal text-lg"
-                      placeholder={text.barcodePlaceholder}
-                      autoFocus
+                )}
+              </div>
+
+              {errorMsg && (
+                <div className="mt-6 p-4 rounded-xl bg-red-500/10 border-2 border-red-500/30 text-red-400 text-sm font-semibold flex items-center backdrop-blur-sm">
+                  <svg
+                    className="w-5 h-5 mr-3 flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
                     />
-                  </div>
+                  </svg>
+                  {errorMsg}
                 </div>
               )}
-            </div>
 
-            {errorMsg && (
-              <div className="mt-6 p-4 rounded-lg bg-red-50 border border-red-100 text-red-700 text-sm font-medium flex items-center">
-                <svg
-                  className="w-5 h-5 mr-3 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
+              <div className="max-w-md mx-auto mt-8 flex flex-col gap-3">
+                <button
+                  onClick={handleVerify}
+                  disabled={isLoading}
+                  className="relative w-full h-14 bg-sky-600 text-white font-bold text-lg rounded-xl transition-all transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-sky-500/30 hover:bg-sky-500 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden group" // <-- CHANGED: Solid Blue, Hover lighter blue
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                {errorMsg}
-              </div>
-            )}
-
-            <div className="max-w-md mx-auto mt-8 flex flex-col gap-3">
-              <button
-                onClick={handleVerify}
-                disabled={isLoading}
-                className="w-full h-12 text-white font-medium text-lg rounded-lg transition-all transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-lg"
-                style={{
-                  background: eagleGradient,
-                  boxShadow: `0 4px 15px ${eagleShadow}`,
-                }}
-              >
-                {isLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg
-                      className="animate-spin h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    {text.checking}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    {isLoading ? (
+                      <>
+                        <svg
+                          className="animate-spin h-5 w-5"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        {text.checking}
+                      </>
+                    ) : (
+                      text.verify
+                    )}
                   </span>
-                ) : (
-                  text.verify
-                )}
-              </button>
+                </button>
 
-              <button
-                onClick={handleClear}
-                disabled={isLoading}
-                className="w-full h-12 text-gray-500 font-medium text-sm rounded-lg hover:text-[#004C54] hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
-              >
-                {text.clear}
-              </button>
+                <button
+                  onClick={handleClear}
+                  disabled={isLoading}
+                  className="w-full h-12 text-gray-400 font-semibold text-sm rounded-xl hover:text-white hover:bg-gray-800/50 transition-all"
+                >
+                  {text.clear}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -667,13 +673,13 @@ export default function VoucherVerifyView() {
                         <p className="text-sm text-gray-500 mb-1">
                           {text.voucherNo}
                         </p>
-                        <p className="text-2xl font-bold text-gray-900 break-all font-mono tracking-tight">
+                        <p className="text-2xl font-bold text-gray-900 break-all font-mono tracking-tight uppercase">
                           {displayVoucherNo}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500 mb-1">{text.pin}</p>
-                        <p className="text-2xl font-bold text-gray-900 break-all font-mono tracking-tight">
+                        <p className="text-2xl font-bold text-gray-900 break-all font-mono tracking-tight uppercase">
                           {displayPin}
                         </p>
                       </div>
@@ -767,7 +773,7 @@ export default function VoucherVerifyView() {
                             ))}
                           </svg>
                         </div>
-                        <p className="text-sm text-gray-600 mt-2 font-mono tracking-widest text-center">
+                        <p className="text-sm text-gray-600 mt-2 font-mono tracking-widest text-center uppercase">
                           {displayBarcodeText}
                         </p>
                       </div>
@@ -790,8 +796,8 @@ export default function VoucherVerifyView() {
                     verifiedData.Status === "Redeemed" ||
                     verifiedData.Status === "Used"
                   }
-                  className="flex-1 py-3 px-4 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
-                  style={{ background: eaglePrimary }}
+                  className="flex-1 py-3 px-4 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 bg-sky-600"
+                  
                 >
                   {isLoading ? text.processing : text.approve}
                 </button>
@@ -827,9 +833,8 @@ export default function VoucherVerifyView() {
               </p>
               <button
                 onClick={handleReset}
-                className="w-64 h-12 text-white font-medium text-lg rounded-lg transition-all transform active:scale-[0.98] hover:shadow-lg"
+                className="bg-sky-600 w-64 h-12 text-white font-medium text-lg rounded-lg transition-all transform active:scale-[0.98] hover:shadow-lg"
                 style={{
-                  background: eaglePrimary,
                   boxShadow: `0 4px 15px ${eagleShadow}`,
                 }}
               >
@@ -882,15 +887,19 @@ export default function VoucherVerifyView() {
           </div>
         )}
       </div>
+
       <style jsx global>{`
+        /* UPDATED: ปรับ Keyframe ให้มี filter blur และ scale เพื่อความนุ่มนวล */
         @keyframes slideUp {
-          from {
+          0% {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(30px) scale(0.95);
+            filter: blur(10px);
           }
-          to {
+          100% {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
+            filter: blur(0px);
           }
         }
         .animate-bounce-slow {

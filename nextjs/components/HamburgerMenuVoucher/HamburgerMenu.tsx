@@ -54,7 +54,7 @@ export default function HamburgerMenu({ lang, currentUrl }: HamburgerMenuProps) 
         aria-label="Menu"
         aria-expanded={isOpen}
       >
-        <Menu className="w-6 h-6 text-gray-700" />
+        <Menu className="w-6 h-6 text-gray-500" />
       </button>
 
       {/* Backdrop Overlay */}
