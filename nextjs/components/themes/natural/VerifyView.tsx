@@ -1,40 +1,42 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import type { VerifyViewModel, ProductApiResponse } from "@/lib/types";
 import { translations, type Language } from "@/lib/translations";
+import confetti from "canvas-confetti";
 
 interface VerifyViewProps {
   verifyData: VerifyViewModel;
 }
 
 export default function VerifyView({ verifyData }: VerifyViewProps) {
-  // ฟังก์ชันแปลงข้อมูล (Mapper)
+  const confettiIntervalRef = useRef<any>(null);
+
   const mapDataToStructure = (
     apiData: any,
     fallbackData: any
   ): ProductApiResponse => {
-    // 1. ลองหาข้อมูลจาก API ที่โหลดมาใหม่ (ถ้ามี)
     const source = apiData?.ScanItem || apiData?.item || apiData;
-
-    // 2. ข้อมูลสำรองจากหน้าเว็บ (Backup) **(จุดที่แก้: เพิ่ม ScanItem ตัวใหญ่)**
-    // any cast เพื่อเลี่ยงปัญหา Type ถ้า interface ในไฟล์ types.ts ยังไม่ได้แก้
     const backup =
       fallbackData?.scanData || (fallbackData as any)?.ScanItem || {};
-
-    // 3. ข้อมูล Properties เดิม (ถ้ามี)
     const backupProps = fallbackData?.productData?.item?.propertiesObj;
 
-    // ดึงค่าทีละตัว (เริ่มจาก API -> Backup -> ขีด)
     const code =
       source?.ProductCode ||
       source?.code ||
+      backup?.productCode ||
       backup?.ProductCode ||
       backup?.Serial ||
       "-";
-    const name =
-      source?.ProductDesc || source?.name || backup?.ProductDesc || code;
+
+    let name = "-";
+    if (source?.description) name = source.description;
+    else if (source?.ProductDesc) name = source.ProductDesc;
+    else if (backup?.ProductDesc) name = backup.ProductDesc;
+    else if (source?.name) name = source.name;
+    else name = code;
+
     const orgId = source?.OrgId || source?.orgId || backup?.OrgId || "-";
     const updatedDate =
       source?.CreatedDate ||
@@ -42,9 +44,12 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
       source?.updatedDate ||
       backup?.CreatedDate;
 
-    // ข้อมูลเสริม (ถ้าใน ScanItem ไม่มี ก็จะแสดงเป็น - หรือค่าว่าง)
-    const narrative = source?.Narrative || source?.narrative || "";
-    const category = source?.Category || backupProps?.category || "-";
+    const narrative = source?.narrative || source?.Narrative || "";
+    const category =
+      source?.propertiesObj?.category ||
+      source?.Category ||
+      backupProps?.category ||
+      "-";
 
     return {
       item: {
@@ -56,29 +61,32 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
         narrative,
         propertiesObj: {
           category,
-          height: source?.Height || 0,
-          width: source?.Width || 0,
-          weight: source?.Weight || 0,
-          dimentionUnit: source?.DimensionUnit || "",
-          weightUnit: source?.WeightUnit || "",
+          height: source?.propertiesObj?.height || 0,
+          width: source?.propertiesObj?.width || 0,
+          weight: source?.propertiesObj?.weight || 0,
+          dimentionUnit:
+            source?.propertiesObj?.dimensionUnit || source?.DimensionUnit || "",
+          weightUnit:
+            source?.propertiesObj?.weightUnit || source?.WeightUnit || "",
         },
       },
       images: source?.Images || source?.images || [],
     };
   };
 
-  // State: เริ่มต้นแปลงข้อมูลทันที (จะเห็นข้อมูลตั้งแต่วินาทีแรก)
   const [productData, setProductData] = useState<ProductApiResponse | null>(
     () => {
-      // Debug ดูว่า verifyData มีอะไรบ้าง (กด F12 ดูได้)
-      console.log("🔹 Initial verifyData:", verifyData);
       return mapDataToStructure(verifyData.productData, verifyData);
     }
   );
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Auto-Fetch
+  const handleRegister = () => {
+    console.log("Register button clicked");
+    alert("ระบบลงทะเบียนกำลังจะเปิดใช้งานเร็วๆ นี้");
+  };
+
   useEffect(() => {
     const fetchProduct = async () => {
       if (!verifyData.productUrl) return;
@@ -92,19 +100,26 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
 
         if (response.ok) {
           const rawData = await response.json();
+          const hasProductData =
+            rawData.item ||
+            rawData.ScanItem ||
+            (rawData.ProductCode && rawData.ProductCode !== "-");
 
-          // ถ้า API Error (เช่น OTP_INVALID) ให้หยุด! ใช้ข้อมูลเดิมที่มีอยู่ต่อไป
           if (
-            rawData.status !== "SUCCESS" &&
-            rawData.status !== "OK" &&
-            !rawData.item &&
-            !rawData.ProductCode
+            !hasProductData &&
+            productData?.item?.code &&
+            productData.item.code !== "-"
           ) {
-            console.warn("⚠️ API Error (Using backup data):", rawData.status);
             return;
           }
 
-          // ถ้าข้อมูลดี ค่อยอัปเดตทับ
+          if (
+            rawData.status !== "SUCCESS" &&
+            rawData.status !== "OK" &&
+            !hasProductData
+          ) {
+            return;
+          }
           const cleanData = mapDataToStructure(rawData, verifyData);
           setProductData(cleanData);
         }
@@ -118,6 +133,56 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
     fetchProduct();
   }, [verifyData.productUrl]);
 
+  useEffect(() => {
+    if (confettiIntervalRef.current) {
+      clearInterval(confettiIntervalRef.current);
+      confettiIntervalRef.current = null;
+    }
+
+    const status = verifyData.status?.toUpperCase();
+
+    if (status === "SUCCESS" || status === "VALID") {
+      const greenColors = ["#22c55e", "#16a34a", "#15803d", "#86efac"];
+      const duration = 2 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+      const randomInRange = (min: number, max: number) =>
+        Math.random() * (max - min) + min;
+
+      const interval: any = setInterval(function () {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+          colors: greenColors,
+        });
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+          colors: greenColors,
+        });
+      }, 250);
+
+      confettiIntervalRef.current = interval;
+    }
+
+    return () => {
+      if (confettiIntervalRef.current) {
+        clearInterval(confettiIntervalRef.current);
+      }
+    };
+  }, [verifyData.status]);
+
   const lang = (verifyData.language || "th") as Language;
   const t = translations[lang];
   const item = productData?.item;
@@ -125,19 +190,75 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
 
   const imageToShow = productData?.images?.[1] || productData?.images?.[0];
 
+  // ✅ เช็คสถานะ Error
+  const status = verifyData.status?.toUpperCase();
+  const isDecryptError =
+    status === "DECRYPT_ERROR" ||
+    status === "DECRYPT_FAIL" ||
+    status === "INVALID_SIGNATURE";
+
+  // 🔴 UI สำหรับกรณี Decrypt Error
+  if (isDecryptError) {
+    return (
+      <div className="min-h-[60vh] w-full p-4 flex items-center justify-center bg-gray-50/50">
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center animate-fadeIn border border-red-100">
+          <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4 shadow-sm">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-8 h-8 text-red-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">
+            {lang === "th"
+              ? "ไม่สามารถตรวจสอบข้อมูลได้"
+              : "Verification Failed"}
+          </h2>
+          <p className="text-gray-500 mb-6 text-sm">
+            {lang === "th"
+              ? "รหัสสินค้าไม่ถูกต้องหรือถูกแก้ไข กรุณาตรวจสอบ QR Code อีกครั้ง"
+              : "Invalid data or corrupted code. Please check the QR code again."}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full py-2.5 px-6 bg-white border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors shadow-sm text-sm"
+          >
+            {lang === "th" ? "ลองใหม่อีกครั้ง" : "Try Again"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading && (!item || item.code === "-")) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center bg-gray-50/50">
+        <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin mb-4"></div>
+        <p className="text-slate-500 text-sm font-medium">กำลังโหลดข้อมูล...</p>
+      </div>
+    );
+  }
+
   const Icons = {
     pencil: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
+        className="w-4 h-4 text-amber-500 mb-1"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="text-amber-500 mb-1"
       >
         <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
         <path d="m15 5 4 4" />
@@ -146,15 +267,13 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
     clipboard: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
+        className="w-4 h-4 text-slate-400 mb-1"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="text-slate-400 mb-1"
       >
         <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
         <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
@@ -163,15 +282,13 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
     triangle: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
+        className="w-4 h-4 text-slate-400 mb-1"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="text-slate-400 mb-1"
       >
         <path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
       </svg>
@@ -179,15 +296,13 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
     scale: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
+        className="w-4 h-4 text-slate-400 mb-1"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="text-slate-400 mb-1"
       >
         <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
         <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
@@ -198,24 +313,15 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
     ),
   };
 
-  // Loading Screen (แสดงเฉพาะตอนแรกถ้ายังไม่มีข้อมูลจริงๆ)
-  if (isLoading && (!item || item.code === "-")) {
-    return (
-      <div className="min-h-[50vh] bg-gray-50 flex flex-col items-center justify-center">
-        <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-600 rounded-full animate-spin mb-4"></div>
-        <p className="text-slate-500 font-medium">กำลังโหลดข้อมูล...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-[50vh] bg-gray-50 p-2 flex items-center justify-center">
-      <div className="bg-white rounded-2xl shadow-lg max-w-5xl w-full mx-auto overflow-hidden animate-fadeIn">
-        <div className="p-5 md:p-8">
-          <div className="flex flex-col md:flex-row gap-6 md:gap-8">
-            {/* Left: Image */}
-            <div className="flex-shrink-0 mx-auto md:mx-0">
-              <div className="bg-slate-100 rounded-2xl overflow-hidden shadow-lg w-64 h-80 relative border border-slate-200">
+    <div className="min-h-[60vh] w-full p-4 flex items-center justify-center bg-gray-50/50">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden animate-fadeIn">
+        <div className="p-5 md:p-6">
+          <div className="flex flex-col md:flex-row gap-6 lg:gap-8">
+            {/* --- Left Column: Image + Meta --- */}
+            <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-3">
+              {/* Image Container */}
+              <div className="bg-slate-100 rounded-xl overflow-hidden shadow-sm border border-slate-200 relative w-full aspect-video md:aspect-square">
                 {imageToShow ? (
                   <Image
                     src={imageToShow.imageUrl}
@@ -230,113 +336,22 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* Right: Details */}
-            <div className="flex-1 space-y-4 md:space-y-6">
-              <div>
-                <div className="flex items-center gap-2 md:gap-3 mb-2 flex-wrap justify-center md:justify-start">
-                  <h1 className="text-2xl md:text-3xl font-bold text-slate-800 text-center md:text-left">
-                    {/* รหัสสินค้า */}
-                    {item?.code || verifyData.scanData?.serial || "-"}
-                  </h1>
-                  {(verifyData.status === "VALID" ||
-                    verifyData.status === "SUCCESS") && (
-                    <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                      Verified
-                    </span>
-                  )}
-                </div>
-                <p className="text-slate-600 text-base md:text-lg text-center md:text-left">
-                  {/* ชื่อสินค้า */}
-                  {item?.name || "-"}
-                </p>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-                <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-3 text-center md:text-left">
-                  <div className="flex justify-center md:justify-start">
-                    {Icons.pencil}
+              {/* Manufacturer & Update */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100 text-left">
+                  <div className="text-slate-400 text-[10px] mb-0.5">
+                    ผู้ผลิต
                   </div>
-                  <div className="font-semibold text-slate-800 text-sm">
-                    ประเภทสินค้า
-                  </div>
-                  <div className="text-xs text-slate-600 mt-1 truncate">
-                    {props?.category || "-"}
-                  </div>
-                </div>
-                <div className="bg-slate-50 border-2 border-slate-200 rounded-lg p-3 text-center md:text-left">
-                  <div className="flex justify-center md:justify-start">
-                    {Icons.clipboard}
-                  </div>
-                  <div className="font-semibold text-slate-800 text-sm">
-                    {t.labels.height}
-                  </div>
-                  <div className="text-xs text-slate-600 mt-1">
-                    {props?.height ? `${props.height}` : "-"}
-                  </div>
-                </div>
-                <div className="bg-slate-50 border-2 border-slate-200 rounded-lg p-3 text-center md:text-left">
-                  <div className="flex justify-center md:justify-start">
-                    {Icons.triangle}
-                  </div>
-                  <div className="font-semibold text-slate-800 text-sm">
-                    {t.labels.width}
-                  </div>
-                  <div className="text-xs text-slate-600 mt-1">
-                    {props?.width ? `${props.width}` : "-"}
-                  </div>
-                </div>
-                <div className="bg-slate-50 border-2 border-slate-200 rounded-lg p-3 text-center md:text-left">
-                  <div className="flex justify-center md:justify-start">
-                    {Icons.scale}
-                  </div>
-                  <div className="font-semibold text-slate-800 text-sm">
-                    {t.labels.weight}
-                  </div>
-                  <div className="text-xs text-slate-600 mt-1">
-                    {props?.weight ? `${props.weight}` : "-"}
-                  </div>
-                </div>
-              </div>
-
-              {/* Features */}
-              <div className="bg-slate-50 rounded-xl p-4 md:p-5 border border-slate-200">
-                <h3 className="font-semibold text-slate-800 mb-3 text-lg">
-                  คุณสมบัติเด่น
-                </h3>
-                <div className="space-y-2">
-                  {item?.narrative ? (
-                    item.narrative.split("|").map((feat, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
-                        <span className="text-slate-700 text-sm">
-                          {feat.trim()}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-slate-400 text-sm italic">
-                      - ไม่มีข้อมูล -
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Footer Info */}
-              <div className="grid grid-cols-2 gap-3 md:gap-4">
-                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 text-center md:text-left">
-                  <div className="text-slate-500 text-xs mb-1">ผู้ผลิต</div>
-                  <div className="font-semibold text-slate-800 text-sm truncate">
+                  <div className="font-semibold text-slate-800 text-xs truncate">
                     {item?.orgId || "-"}
                   </div>
                 </div>
-                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 text-center md:text-left">
-                  <div className="text-slate-500 text-xs mb-1">
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100 text-left">
+                  <div className="text-slate-400 text-[10px] mb-0.5">
                     อัปเดตล่าสุด
                   </div>
-                  <div className="font-semibold text-slate-800 text-sm">
+                  <div className="font-semibold text-slate-800 text-xs truncate">
                     {item?.updatedDate
                       ? new Date(item.updatedDate).toLocaleDateString("th-TH", {
                           day: "numeric",
@@ -347,21 +362,137 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
                   </div>
                 </div>
               </div>
+
+              {/* Serial & PIN (Left Column - Below Meta) */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100 text-left">
+                  <div className="text-slate-400 text-[10px] mb-0.5 font-semibold">
+                    Serial Number
+                  </div>
+                  <div className="font-bold text-slate-800 text-xs truncate font-mono">
+                    {verifyData.scanData?.serial || "-"}
+                  </div>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-100 text-left">
+                  <div className="text-slate-400 text-[10px] mb-0.5 font-semibold">
+                    PIN
+                  </div>
+                  <div className="font-bold text-slate-800 text-xs truncate font-mono">
+                    {verifyData.scanData?.pin || "-"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* --- Right Column: Details --- */}
+            <div className="flex-1 flex flex-col gap-4">
+              {/* Header */}
+              <div>
+                <div className="flex items-center gap-3 mb-1 flex-wrap">
+                  <h1 className="text-2xl font-bold text-slate-900 font-mono tracking-tight">
+                    {item?.code || verifyData.scanData?.serial || "-"}
+                  </h1>
+                  {(status === "VALID" || status === "SUCCESS") && (
+                    <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                      Verified
+                    </span>
+                  )}
+                </div>
+                <p className="text-slate-500 text-sm">{item?.name || "-"}</p>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-left hover:shadow-sm transition-all">
+                  <div className="flex justify-start">{Icons.pencil}</div>
+                  <div className="font-semibold text-slate-800 text-xs mt-1">
+                    ประเภท
+                  </div>
+                  <div className="text-xs text-slate-600 truncate">
+                    {props?.category || "-"}
+                  </div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-2.5 text-left">
+                  <div className="flex justify-start">{Icons.clipboard}</div>
+                  <div className="font-semibold text-slate-800 text-xs mt-1">
+                    {t.labels.height}
+                  </div>
+                  <div className="text-xs text-slate-600">
+                    {props?.height ? `${props.height}` : "-"}
+                  </div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-2.5 text-left">
+                  <div className="flex justify-start">{Icons.triangle}</div>
+                  <div className="font-semibold text-slate-800 text-xs mt-1">
+                    {t.labels.width}
+                  </div>
+                  <div className="text-xs text-slate-600">
+                    {props?.width ? `${props.width}` : "-"}
+                  </div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-2.5 text-left">
+                  <div className="flex justify-start">{Icons.scale}</div>
+                  <div className="font-semibold text-slate-800 text-xs mt-1">
+                    {t.labels.weight}
+                  </div>
+                  <div className="text-xs text-slate-600">
+                    {props?.weight ? `${props.weight}` : "-"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Features */}
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 flex-grow">
+                <h3 className="font-semibold text-slate-800 mb-2 text-sm">
+                  คุณสมบัติเด่น
+                </h3>
+                <div className="space-y-1.5">
+                  {item?.narrative ? (
+                    item.narrative.split("|").map((feat, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0 mt-1.5"></div>
+                        <span className="text-slate-600 text-xs leading-relaxed">
+                          {feat.trim()}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-slate-400 text-xs italic text-center py-2">
+                      - ไม่มีข้อมูลคุณสมบัติ -
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="mt-auto">
+                <button
+                  onClick={handleRegister}
+                  className="w-full py-2.5 px-6 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.01] active:scale-[0.98] flex items-center justify-center gap-2"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  {lang === "th" ? "ลงทะเบียนสินค้า" : "Register Product"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Footer Link */}
-        <div className="bg-slate-100 px-6 py-4 flex flex-col md:flex-row items-center justify-between border-t border-slate-200 gap-2 text-center md:text-left">
-          <span className="text-slate-500 text-sm">
-            © {new Date().getFullYear()} Please Scan
-          </span>
-          <a
-            href="#"
-            className="text-blue-600 hover:text-blue-700 text-sm hover:underline"
-          >
-            นโยบายความเป็นส่วนตัว
-          </a>
         </div>
       </div>
       <style jsx global>{`
@@ -376,7 +507,7 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
           }
         }
         .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out forwards;
+          animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `}</style>
     </div>
