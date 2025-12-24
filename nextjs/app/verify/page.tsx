@@ -29,6 +29,7 @@ import VerifyView from "@/components/themes/default/VerifyView";
 import VerifyViewMinimal from "@/components/themes/minimal/VerifyView";
 import VerifyViewModern from "@/components/themes/modern/VerifyView";
 import VerifyViewEagle from "@/components/themes/eagle/VerifyView";
+import VeryfyViewNatural from "@/components/themes/natural/VerifyView"
 import HamburgerMenu from "@/components/HamburgerMenu";
 import Link from "next/link";
 
@@ -191,7 +192,7 @@ function DefaultLayout({
       </header>
 
       {/* Main Content Area - Centered like C# */}
-      <main role="main" className="flex-1 grid place-items-center py-8">
+      <main role="main" className="flex-1 grid place-items-center">
         {children}
       </main>
 
@@ -349,7 +350,7 @@ function EagleLayout({
 
 // Whitelist of allowed themes (matching C# controller)
 // Add new themes here as you create them in components/themes/{themeName}/
-const ALLOWED_THEMES = ["default", "modern", "minimal","eagle"];
+const ALLOWED_THEMES = ["default", "modern", "minimal","eagle","natural"];
 
 /**
  * Fetch product data from external API (matching C# FetchProductData)
@@ -764,6 +765,8 @@ export default async function VerifyPage({ searchParams }: VerifyPageProps) {
             return VerifyViewModern
           case "eagle":
             return VerifyViewEagle
+          case "natural":
+            return VeryfyViewNatural
           case "default":
           default:
             return VerifyView as React.ComponentType<any>;
