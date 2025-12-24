@@ -192,7 +192,7 @@ function DefaultLayout({
       </header>
 
       {/* Main Content Area - Centered like C# */}
-      <main role="main" className="flex-1 grid place-items-center py-8">
+      <main role="main" className="flex-1 grid place-items-center">
         {children}
       </main>
 

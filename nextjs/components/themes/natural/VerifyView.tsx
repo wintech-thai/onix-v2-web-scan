@@ -452,7 +452,15 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
   // Error UI (Decrypt Fail)
   if (isDecryptError) {
     return (
-      <div className="min-h-[60vh] w-full p-4 flex items-center justify-center bg-[#fafdfbd7]">
+      <div
+        className="h-full w-full p-4 flex items-center justify-center"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)), url('https://getwallpapers.com/wallpaper/full/d/d/9/1107414-free-download-pretty-green-backgrounds-1920x1080.jpg')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed", // ทำให้รูปไม่เลื่อนตามเวลา Scroll
+        }}
+      >
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center animate-fadeIn border border-red-100">
           <div className="mx-auto w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 shadow-sm">
             <svg
@@ -498,7 +506,15 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
   // Main UI (Product Card)
   return (
     // Main Background
-    <div className="min-h-[60vh] w-full p-4 flex items-center justify-center bg-[#fafdfbd7]">
+    <div
+      className="h-full w-full p-4 flex items-center justify-center"
+      style={{
+        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)), url('https://getwallpapers.com/wallpaper/full/d/d/9/1107414-free-download-pretty-green-backgrounds-1920x1080.jpg')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed", // ทำให้รูปไม่เลื่อนตามเวลา Scroll
+      }}
+    >
       {/* Container Background */}
       <div className="bg-[#fafdfb] rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden animate-fadeIn relative border border-[#dce4d0]">
         <div className="p-5 md:p-6">
