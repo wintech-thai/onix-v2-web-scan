@@ -116,6 +116,7 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
     }
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(true);
 
   // Registration Logic States
   const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
@@ -521,15 +522,28 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
           <div className="flex flex-col md:flex-row gap-6 lg:gap-8">
             {/* Left Column: Image & Meta */}
             <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-3">
+              {/* --- ส่วนรูปภาพ  --- */}
               <div className="bg-[#f0f4eb] rounded-xl overflow-hidden shadow-sm border border-[#e0e8d9] relative w-full aspect-video md:aspect-square">
                 {imageToShow ? (
-                  <Image
-                    src={imageToShow.imageUrl}
-                    alt="Product"
-                    fill
-                    className="object-cover"
-                    priority
-                  />
+                  <>
+                    {isImageLoading && (
+                      <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#f0f4eb]">
+                        <div className="w-10 h-10 border-4 border-[#c8e6c9] border-t-[#2e7d32] rounded-full animate-spin"></div>
+                      </div>
+                    )}
+
+                    {/* 2. ตัวรูปภาพ */}
+                    <Image
+                      src={imageToShow.imageUrl}
+                      alt="Product"
+                      fill
+                      className={`object-cover transition-opacity duration-500 ease-in-out ${
+                        isImageLoading ? "opacity-0" : "opacity-100"
+                      }`}
+                      priority
+                      onLoadingComplete={() => setIsImageLoading(false)}
+                    />
+                  </>
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-[#7a9671]">
                     <span className="text-sm">No Image</span>
@@ -706,46 +720,18 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
               <div className="mt-auto">
                 <button
                   onClick={handleRegisterClick}
-                  disabled={
-                    isCheckingRegistration ||
-                    statusVerify === "ALREADY_REGISTERED"
-                  }
-                  className="w-full py-2.5 px-6 text-white text-sm font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  disabled={isCheckingRegistration}
+                  className="w-full py-2.5 px-6 text-white text-sm font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
                   style={{
                     background:
-                      statusVerify === "ALREADY_REGISTERED"
-                        ? "#9ca3af" // สีเทา (Gray-400)
-                        : "linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)",
-                    boxShadow:
-                      statusVerify === "ALREADY_REGISTERED"
-                        ? "none"
-                        : "0 10px 15px -3px rgba(46, 125, 50, 0.3)",
+                      "linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)",
+                    boxShadow: "0 10px 15px -3px rgba(46, 125, 50, 0.3)",
                   }}
                 >
                   {isCheckingRegistration ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       {lang === "th" ? "กำลังตรวจสอบ..." : "Checking..."}
-                    </>
-                  ) : statusVerify === "ALREADY_REGISTERED" ? (
-                    <>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                      </svg>
-                      {lang === "th"
-                        ? "ลงทะเบียนเรียบร้อยแล้ว"
-                        : "Already Registered"}
                     </>
                   ) : (
                     <>
