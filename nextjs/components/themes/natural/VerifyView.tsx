@@ -458,7 +458,7 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
   if (isDecryptError) {
     return (
       <div
-        className="min-h-screen w-full p-4 flex items-center justify-center bg-fixed bg-cover bg-center"
+        className="h-full w-full p-4 flex items-center justify-center bg-fixed bg-cover bg-center"
         style={{
           backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)), url('https://getwallpapers.com/wallpaper/full/d/d/9/1107414-free-download-pretty-green-backgrounds-1920x1080.jpg')`,
         }}
@@ -484,6 +484,9 @@ export default function VerifyView({ verifyData }: VerifyViewProps) {
             {lang === "th"
               ? "ไม่สามารถตรวจสอบข้อมูลได้"
               : "Verification Failed"}
+          </h2>
+          <h2 className="text-xl font-bold text-red-600 mb-2">
+              Decrypt Fail
           </h2>
           <button
             onClick={() => window.location.reload()}
